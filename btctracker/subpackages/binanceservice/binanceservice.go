@@ -33,31 +33,31 @@ type binanceTicket struct {
 }
 
 //GetTicket requests ticket data from binance
-func GetTicket() (ticket tracker.Ticket) {
+func GetTicket() (ticket tracker.Ticket, funcErr error) {
 	url := "https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT"
 	binanceClient := http.Client{
 		Timeout: time.Second * 30,
 	}
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
-		panic(err)
+		funcErr = err
 	}
 
 	res, httpErr := binanceClient.Do(req)
 	if httpErr != nil {
-		panic(httpErr)
+		funcErr = httpErr
 	}
 	defer res.Body.Close()
 
 	body, readErr := ioutil.ReadAll(res.Body)
 	if readErr != nil {
-		panic(readErr)
+		funcErr = readErr
 	}
 
 	binanceTicket := binanceTicket{}
 	jsonErr := json.Unmarshal(body, &binanceTicket)
 	if jsonErr != nil {
-		panic(jsonErr)
+		funcErr = jsonErr
 	}
 
 	ticket = tracker.Ticket{Bid: binanceTicket.BidPrice, Ask: binanceTicket.AskPrice, CreatedOn: time.Now()}
