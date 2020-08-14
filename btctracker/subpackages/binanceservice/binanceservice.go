@@ -11,9 +11,9 @@ import (
 type binanceTicket struct {
 	symbol             string
 	PriceChange        float32 `json:",string"`
-	priceChangePercent float32 `json:",string"`
-	weightedAvgPrice   float32 `json:",string"`
-	prevClosePrice     float32 `json:",string"`
+	PriceChangePercent float32 `json:",string"`
+	WeightedAvgPrice   float32 `json:",string"`
+	PrevClosePrice     float32 `json:",string"`
 	LastPrice          float32 `json:",string"`
 	LastQty            float32 `json:",string"`
 	BidPrice           float32 `json:",string"`

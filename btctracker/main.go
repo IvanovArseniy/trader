@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	fmt.Printf("Trader started\n")
+	fmt.Printf("Tracker started\n")
 	for {
 		time.Sleep(5 * time.Second)
 		ticket, err := binanceservice.GetTicket()
@@ -18,7 +18,7 @@ func main() {
 		}
 		_, err = postgresservice.SaveTicket(ticket)
 		if err != nil {
-			fmt.Print("Error occured %v\n", err)
+			fmt.Printf("Error occured %v\n", err)
 		}
 		fmt.Printf("ID: %v, Bid: %v, Ask: %v, CreatedOn: %v\n", ticket.ID, ticket.Bid, ticket.Ask, ticket.CreatedOn)
 	}
