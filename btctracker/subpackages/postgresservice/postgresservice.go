@@ -13,12 +13,14 @@ func SaveTicket(ticket tracker.Ticket) (ticketID int64, funcErr error) {
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		funcErr = err
+		return
 	}
 	defer db.Close()
 
 	result, err := db.Exec("insert into \"RateHistory\" (bid, ask, createdOn) values ($1, $2,  $3)", ticket.Bid, ticket.Ask, ticket.CreatedOn)
 	if err != nil {
 		funcErr = err
+		return
 	}
 	ticketID, err = result.LastInsertId()
 	return
