@@ -47,7 +47,11 @@ func GetTicket() (ticket tracker.Ticket, funcErr error) {
 	if httpErr != nil {
 		funcErr = httpErr
 	}
-	defer res.Body.Close()
+	if res != nil {
+		defer res.Body.Close()
+	} else {
+		return
+	}
 
 	body, readErr := ioutil.ReadAll(res.Body)
 	if readErr != nil {
