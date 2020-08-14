@@ -41,6 +41,7 @@ func GetTicket() (ticket tracker.Ticket, funcErr error) {
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		funcErr = err
+		return
 	}
 
 	res, httpErr := binanceClient.Do(req)
