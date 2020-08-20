@@ -10,23 +10,74 @@ import (
 
 func main() {
 	fmt.Printf("Orderer started\n")
+
+	// order := orderer.Order{Price: 30000.02, Quantity: 0.001, Side: orderer.SellSide}
+	// orderID, _ := binanceservice.CreateOrder(order)
+	// binanceservice.CloseOrder(orderID)
+
 	for {
 		time.Sleep(10 * time.Second)
-		makeOrder := false
-		ticket, err := binanceservice.GetTicket()
-		// ticket := orderer.Ticket{ID: 200, Bid: 11750, Ask: 11751}
-		level, err := postgresservice.GetLevel(ticket.Bid)
+		openedOrders, err := postgresservice.GetOpenedOrders()
 		if err != nil {
-			fmt.Printf("Error occured %v\n", err)
-		} else if level != (orderer.Level{}) {
-			makeOrder = true
+			fmt.Printf("Error occured %v", err)
 		}
-		if makeOrder {
-			fmt.Printf("level ID=%v for bid %v\n", level.ID, ticket.Bid)
-			//make order
-			//save opened order, close order and stoploss order to DB
+		if len(openedOrders) == 0 {
+			ticket, err := binanceservice.GetTicket()
+			level, err := postgresservice.GetLevel(ticket.Bid)
+			if err != nil {
+				fmt.Printf("Error occured %v\n", err)
+			} else if level != (orderer.Level{}) {
+				fmt.Printf("level ID=%v for bid %v\n", level.ID, ticket.Bid)
+				order := orderer.Order{}
+				orderID, createOrderErr := binanceservice.CreateOrder(order)
+				if createOrderErr != nil {
+					fmt.Printf("Error occured %v", createOrderErr)
+				}
+				order.ID = orderID
+				postgresservice.CreateOrder(order)
+			} else {
+				fmt.Printf("No level for bid %v\n", ticket.Bid)
+			}
+		} else if len(openedOrders) == 1 {
+			order, err := binanceservice.GetOrder(openedOrders[0].ID)
+			if err != nil {
+				fmt.Printf("Error occured: %v", err)
+				continue
+
+			}
+			if order.Status != openedOrders[0].Status && order.Status == orderer.ClosedOrder {
+				result, err := postgresservice.CloseOrder(order.ID)
+				if err != nil {
+					fmt.Printf("Error occured: %v", err)
+					continue
+				}
+				if !result {
+					fmt.Printf("Error occuder: Order do not closed in daatabase")
+					continue
+				}
+				if openedOrders[0].ParentOrderID == 0 {
+					order := orderer.Order{}
+					orderID, err := binanceservice.CreateOcoOrder(order)
+					if err != nil {
+						fmt.Printf("Error occured: %v\n", err)
+					}
+					order.ID = orderID
+					postgresservice.CreateOrder(order)
+				}
+			}
 		} else {
-			fmt.Printf("No level for bid %v\n", ticket.Bid)
+			closeOpenedSellOrders()
 		}
+		defer closeOpenedSellOrders()
+	}
+}
+
+func closeOpenedSellOrders() {
+	orderIDs, err := postgresservice.CloseOpenedSellOrders()
+	if err != nil {
+		return
+	}
+	for orderID := range orderIDs {
+		binanceservice.CloseOrder(int64(orderID))
 	}
 }
