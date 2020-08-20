@@ -25,3 +25,39 @@ func SaveTicket(ticket tracker.Ticket) (ticketID int64, funcErr error) {
 	ticketID, err = result.LastInsertId()
 	return
 }
+
+// CalculateCandle call stored procedure to calculate candles
+func CalculateCandle() (funcErr error) {
+	connStr := "user=postgres password=postgres dbname=btcanalytics sslmode=disable"
+	db, err := sql.Open("postgres", connStr)
+	if err != nil {
+		funcErr = err
+		return
+	}
+	defer db.Close()
+
+	_, err = db.Exec("call \"CalculateCandle\"()")
+	if err != nil {
+		funcErr = err
+		return
+	}
+	return
+}
+
+// CalculateLevel call storep procedure to calculate levels
+func CalculateLevel() (funcErr error) {
+	connStr := "user=postgres password=postgres dbname=btcanalytics sslmode=disable"
+	db, err := sql.Open("postgres", connStr)
+	if err != nil {
+		funcErr = err
+		return
+	}
+	defer db.Close()
+
+	_, err = db.Exec("call \"CalculateLevel\"()")
+	if err != nil {
+		funcErr = err
+		return
+	}
+	return
+}

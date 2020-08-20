@@ -1,0 +1,5 @@
+{
+    "APIKey": "test",
+    "Secret": "test",
+    "PostgresConnectionString": "user=postgres password=postgres dbname=btcanalytics sslmode=disable"
+}

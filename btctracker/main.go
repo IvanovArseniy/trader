@@ -20,6 +20,15 @@ func main() {
 		if err != nil {
 			fmt.Printf("Error occured %v\n", err)
 		}
+		err = postgresservice.CalculateCandle()
+		if err != nil {
+			fmt.Printf("Error occured %v\n", err)
+		}
+		err = postgresservice.CalculateLevel()
+		if err != nil {
+			fmt.Printf("Error occured %v\n", err)
+		}
+
 		fmt.Printf("ID: %v, Bid: %v, Ask: %v, CreatedOn: %v\n", ticket.ID, ticket.Bid, ticket.Ask, ticket.CreatedOn)
 	}
 }
