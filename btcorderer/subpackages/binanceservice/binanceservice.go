@@ -44,26 +44,32 @@ type serverTime struct {
 }
 
 type binanceOrder struct {
-	Symbol              string  `json:",string"`
-	ID                  int64   `json:"orderId,int"`
-	OrderListID         int     `json:"orderListId,int"`
-	ClientOrderID       string  `json:"clientOrderId,string"`
-	TransactTime        int64   `json:",int"`
+	symbol              string
+	ID                  int64 `json:"orderId,int"`
+	orderListID         int
+	clientOrderID       string
 	Price               float64 `json:",string"`
 	OrigQty             float64 `json:",string"`
 	ExecutedQty         float64 `json:",string"`
 	CummulativeQuoteQty float64 `json:",string"`
-	Status              string  `json:",string"`
-	TimeInForce         string  `json:",string"`
-	OrderType           string  `json:"type,string"`
-	Side                string  `json:",string"`
+	Status              string  `json:"status"`
+	TimeInForce         string  `json:"timeInForce"`
+	OrderType           string  `json:"type"`
+	Side                string  `json:"side"`
+	StopPrice           float64 `json:",string"`
+	IcebergQty          float64 `json:",string"`
+	time                int64
+	updateTime          int64
+	isWorking           bool
+	OrigQuoteOrderQty   float64 `json:",string"`
 }
 
-type binanceOrderStatus string
-
-const (
-	closeStatus binanceOrderStatus = "CANCELED"
-)
+type binanceOrderList struct {
+	ListOrderStatus string         `json:"listOrderStatus"`
+	ListStatusType  string         `json:"listStatusType"`
+	OrderListID     int64          `json:"orderListId"`
+	Orders          []binanceOrder `json:"orders"`
+}
 
 //GetTicket requests ticket data from binance
 func GetTicket() (ticket orderer.Ticket, funcErr error) {
@@ -144,19 +150,85 @@ func createSignature(data string, secret string) (signature string, err error) {
 	return
 }
 
-//GetOrder function get order from binance by ID
-func GetOrder(orderOD int64) (order orderer.Order, err error) {
-	// https://github.com/binance-exchange/binance-official-api-docs/blob/master/rest-api.md#order-book
-	// https://academy.binance.com/tutorials/what-is-an-oco-order
-	return
-}
-
-func getSide(orderside orderer.OrderSide) (side string) {
+func getSideByID(orderside orderer.OrderSide) (side string) {
 	if orderside == orderer.BuySide {
 		side = "BUY"
 	} else if orderside == orderer.SellSide {
 		side = "SELL"
 	}
+	return
+}
+
+func getIDBySide(side string) (orderside orderer.OrderSide) {
+	if side == "BUY" {
+		orderside = orderer.BuySide
+	}
+	if side == "SELL" {
+		orderside = orderer.SellSide
+	}
+	return
+}
+
+func getIDByStatus(status string) (orderstatus orderer.OrderStatus) {
+	if status == "NEW" || status == "PARTIALLY_FILLED" || status == "PENDING_CANCEL" {
+		orderstatus = orderer.OpenedOrder
+	}
+	if status == "FILLED" {
+		orderstatus = orderer.ClosedOrder
+	}
+	if status == "CANCELED" || status == "REJECTED" || status == "EXPIRED" {
+		orderstatus = orderer.CanceledOrder
+	}
+	return
+}
+
+//GetOrder function get order from binance by ID
+func GetOrder(orderID int64) (order orderer.Order, err error) {
+	// https://github.com/binance-exchange/binance-official-api-docs/blob/master/rest-api.md#order-book
+	// https://academy.binance.com/tutorials/what-is-an-oco-order
+	configuration := orderer.Configuration{}
+	err = gonfig.GetConf("config/config.json", &configuration)
+	if err != nil {
+		return
+	}
+
+	url := "https://api.binance.com/api/v3/order"
+	timestamp, err := GetServerTime()
+	if err != nil {
+		return
+	}
+	queryString := fmt.Sprintf("symbol=BTCUSDT&orderId=%v&timestamp=%v", orderID, timestamp)
+	signature, err := createSignature(queryString, configuration.Secret)
+	if err != nil {
+		return
+	}
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return
+	}
+	req.Header.Set("X-MBX-APIKEY", configuration.APIKey)
+	req.URL.RawQuery = fmt.Sprintf("symbol=BTCUSDT&orderId=%v&timestamp=%v&signature=%v", orderID, timestamp, signature)
+	binanceClient := http.Client{Timeout: 30 * time.Second}
+	resp, err := binanceClient.Do(req)
+	if err != nil {
+		return
+	}
+	if resp != nil {
+		defer resp.Body.Close()
+	} else {
+		return
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return
+	}
+	binanceOrder := binanceOrder{}
+	err = json.Unmarshal(body, &binanceOrder)
+	if err != nil {
+		return
+	}
+	order = orderer.Order{Price: binanceOrder.Price, Quantity: binanceOrder.OrigQty, Status: getIDByStatus(binanceOrder.Status), Side: getIDBySide(binanceOrder.Side)}
 	return
 }
 
@@ -173,7 +245,7 @@ func CreateOrder(order orderer.Order) (orderID int64, err error) {
 	if err != nil {
 		return
 	}
-	side := getSide(order.Side)
+	side := getSideByID(order.Side)
 	queryString := fmt.Sprintf("symbol=BTCUSDT&side=%v&type=LIMIT&timeInForce=GTC&quantity=%f&price=%.2f&timestamp=%v", side, order.Quantity, order.Price, timestamp)
 	signature, err := createSignature(queryString, configuration.Secret)
 	if err != nil {
@@ -224,7 +296,7 @@ func CreateOcoOrder(order orderer.Order) (orderID int64, err error) {
 	if err != nil {
 		return
 	}
-	side := getSide(order.Side)
+	side := getSideByID(order.Side)
 	queryString := fmt.Sprintf("symbol=BTCUSDT&side=%v&quantity=%f&price=%.2f&stopPrice=%.2f&stopLimitPrice=%.2f&stopLimitTimeInForce=GTC&timestamp=%v", side, order.Quantity, order.Price, order.StopPrice, order.StopPriceLimit, timestamp)
 	signature, err := createSignature(queryString, configuration.Secret)
 	if err != nil {
@@ -254,24 +326,28 @@ func CreateOcoOrder(order orderer.Order) (orderID int64, err error) {
 	if err != nil {
 		return
 	}
-	binanceOrder := binanceOrder{}
-	err = json.Unmarshal(body, &binanceOrder)
+	binanceOrderList := binanceOrderList{}
+	err = json.Unmarshal(body, &binanceOrderList)
 	if err != nil {
 		return
 	}
-	orderID = binanceOrder.ID
+	if binanceOrderList.Orders != nil && len(binanceOrderList.Orders) > 0 {
+		orderID = binanceOrderList.Orders[0].ID
+	} else {
+		err = errors.New("Oco order was not created")
+	}
 	return
 }
 
 //CloseOrder function close order by orderID
 func CloseOrder(orderID int64) (result bool, err error) {
 	configuration := orderer.Configuration{}
-	err = gonfig.GetConf("config/gonfig.json", &configuration)
+	err = gonfig.GetConf("config/config.json", &configuration)
 	if err != nil {
 		return
 	}
 
-	url := "https://api.binance.com//api/v3/order"
+	url := "https://api.binance.com/api/v3/order"
 	timestamp, err := GetServerTime()
 	if err != nil {
 		return
@@ -309,6 +385,6 @@ func CloseOrder(orderID int64) (result bool, err error) {
 	if err != nil {
 		return
 	}
-	result = binanceOrder.Status == string(closeStatus)
+	result = getIDByStatus(binanceOrder.Status) == orderer.ClosedOrder
 	return
 }

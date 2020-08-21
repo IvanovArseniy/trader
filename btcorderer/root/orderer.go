@@ -34,6 +34,7 @@ type Order struct {
 	StopPriceLimit float64
 	Quantity       float64
 	Side           OrderSide
+	ExternalID     int64
 }
 
 //OrderStatus is Opened and Closed
@@ -44,6 +45,8 @@ const (
 	OpenedOrder OrderStatus = 1
 	//ClosedOrder orderstatus 2
 	ClosedOrder OrderStatus = 2
+	//CanceledOrder orderstatus 2
+	CanceledOrder OrderStatus = 3
 )
 
 //OrderSide is a side of an order

@@ -9,7 +9,9 @@ import (
 
 func main() {
 	fmt.Printf("Tracker started\n")
+	i := 0
 	for {
+		i++
 		time.Sleep(5 * time.Second)
 		ticket, err := binanceservice.GetTicket()
 		if err != nil {
@@ -20,13 +22,16 @@ func main() {
 		if err != nil {
 			fmt.Printf("Error occured %v\n", err)
 		}
-		err = postgresservice.CalculateCandle()
-		if err != nil {
-			fmt.Printf("Error occured %v\n", err)
-		}
-		err = postgresservice.CalculateLevel()
-		if err != nil {
-			fmt.Printf("Error occured %v\n", err)
+		if i == 10 {
+			i = 0
+			err = postgresservice.CalculateCandle()
+			if err != nil {
+				fmt.Printf("Error occured %v\n", err)
+			}
+			err = postgresservice.CalculateLevel()
+			if err != nil {
+				fmt.Printf("Error occured %v\n", err)
+			}
 		}
 
 		fmt.Printf("ID: %v, Bid: %v, Ask: %v, CreatedOn: %v\n", ticket.ID, ticket.Bid, ticket.Ask, ticket.CreatedOn)

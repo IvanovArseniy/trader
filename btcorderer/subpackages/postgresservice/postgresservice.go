@@ -22,7 +22,7 @@ func GetLevel(bid float64) (level orderer.Level, err error) {
 	}
 	defer db.Close()
 
-	rows, err := db.Query("select \"Id\", \"bidfrom\", \"bidto\" from \"Level\" where \"bidfrom\" > $1 and (\"bidfrom\" - 20) < $1 and \"active\" = 1 and \"deleted\" = 0", bid)
+	rows, err := db.Query("select \"Id\", \"bidfrom\", \"bidto\" from \"Level\" where (\"bidfrom\" + 10) > $1 and (\"bidfrom\" - 20) < $1 and \"active\" = 1 and \"deleted\" = 0", bid)
 	if err != nil {
 		return
 	}
@@ -83,7 +83,7 @@ func CreateOrder(order orderer.Order) (orderID int64, err error) {
 	}
 	defer db.Close()
 
-	result, err := db.Exec("insert into \"Order\" (\"parentId\", \"price\", \"quantity\", \"status\",\"side\") values ($1, $2, $3, $4, $5)", order.ParentOrderID, order.Price, order.Quantity, order.Status, order.Side)
+	result, err := db.Exec("insert into \"Order\" (\"parentId\", \"price\", \"quantity\", \"status\",\"side\", \"externalid\") values ($1, $2, $3, $4, $5, $6)", order.ParentOrderID, order.Price, order.Quantity, order.Status, order.Side, order.ExternalID)
 	if err != nil {
 		return
 	}
@@ -105,7 +105,7 @@ func CloseOpenedSellOrders() (orderIDs []int64, err error) {
 	}
 	defer db.Close()
 
-	rows, err := db.Query("select \"Id\" from \"Order\" where \"side\" = 1 and \"status\" = 1")
+	rows, err := db.Query("select \"externalid\" from \"Order\" where \"side\" = 1 and \"status\" = 1")
 	if err != nil {
 		return
 	}
@@ -135,5 +135,27 @@ func GetOrder(orderID int64) (order orderer.Order, err error) {
 
 //CloseOrder function updates order status to CLOSED
 func CloseOrder(orderID int64) (result bool, err error) {
+	configuration := orderer.Configuration{}
+	err = gonfig.GetConf("config/config.json", &configuration)
+	if err != nil {
+		return
+	}
+
+	db, err := sql.Open("postgres", configuration.PostgresConnectionString)
+	if err != nil {
+		return
+	}
+	defer db.Close()
+
+	res, err := db.Exec("Update \"Order\" set \"status\"=2 where \"externalid\"=$1", orderID)
+	if err != nil {
+		return
+	}
+
+	affRows, err := res.RowsAffected()
+	if err != nil {
+		return
+	}
+	result = affRows > 0
 	return
 }
