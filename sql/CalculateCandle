@@ -1,0 +1,21 @@
+-- PROCEDURE: public.CalculateCandle()
+
+-- DROP PROCEDURE public."CalculateCandle"();
+
+CREATE OR REPLACE PROCEDURE public."CalculateCandle"(
+	)
+LANGUAGE 'sql'
+AS $BODY$
+delete from "RateHistory" where "createdon" < (CURRENT_DATE - '5 day'::INTERVAL);
+insert into "Candle" ("active", "month", "day", "hour", "minuteperiod", "startbid", "minbid", "maxbid", "endbid")
+select 0, "month", "day", "hour", "minute", (select bid from "RateHistory" where createdon = startcreatedon limit 1) as startbid, maxbid, minbid, (select bid from "RateHistory" where createdon = endcreatedon limit 1) as endbid from (
+	select "month", "day", "hour", "minute", Min(bid) as minbid, max(bid) as maxbid, min(createdon) as startcreatedon, max(createdon) as endcreatedon from (
+		select bid, createdon, date_part('month', createdon) as month, date_part('day', createdon) as day, date_part('hour', createdon)as hour, (CAST(date_part('minute', createdon) as smallint) / 15) as minute from "RateHistory" order by "id" asc
+	) as "s"
+	group by "month", "day", "hour", "minute"
+) as "t"
+order by "month", "day", "hour", "minute";
+delete from "Candle" where "active" = 0 and "Id" = (select "Id" from "Candle" order by "Id" desc limit 1);
+delete from "Candle" where "active" = 1;
+update "Candle" set "active" = 1;
+$BODY$;
