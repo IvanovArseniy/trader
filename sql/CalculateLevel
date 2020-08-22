@@ -7,14 +7,14 @@ CREATE OR REPLACE PROCEDURE public."CalculateLevel"(
 LANGUAGE 'sql'
 AS $BODY$
 insert into "Level" ("type", "bidfrom", "bidto", "expired")
-select  2, ((c1."startbid" + c2."endbid") / 2 + GREATEST(c1."endbid", c2."startbid")) / 2, GREATEST(c1."endbid", c2."startbid"), (now() + (3 * interval '1 month')  )
+select  2, ((GREATEST(c2."minbid", c3."minbid") + GREATEST(c2."endbid", c3."startbid")) / 2), GREATEST(c2."endbid", c3."startbid"), (now() + (3 * interval '1 month'))
 from "Candle" c1
 join "Candle" c2 on c2."Id" = (c1."Id" + 1)
 join "Candle" c3 on c3."Id" = (c2."Id" + 1)
 join "Candle" c4 on c4."Id" = (c3."Id" + 1)
-where c1."startbid" < c1."endbid" and c2."startbid" > c2."endbid"
-	and c2."endbid" > c3."endbid" and c2."endbid" > c4."endbid"
-	and (select count(*) from "Candle" where "startbid" > c1."endbid" and "endbid" > c1."endbid" and "startbid" > c2."endbid" and "endbid" > c2."endbid" and "Id" > c1."Id" and "Id" > c2."Id" ) < 6;
+where c1."startbid" < c1."endbid" and c2."startbid" < c2."endbid"
+	and c3."startbid" > c3."endbid" and c4."endbid" < c3."startbid"
+	and (select count(*) from "Candle" where "startbid" > c2."endbid" and "endbid" > c2."endbid" and "startbid" > c3."endbid" and "endbid" > c3."endbid" and "Id" > c2."Id" and "Id" > c3."Id" ) < 6;
 
 update "Level" set "deleted" = 1 where "active" = 1;
 update "Level" set "active" = 1 where "deleted" = 0 and "active" = 0;

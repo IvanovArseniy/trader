@@ -63,7 +63,7 @@ func main() {
 		}
 		if len(openedOrders) == 0 {
 			if level != (orderer.Level{}) {
-				order := orderer.Order{Price: level.BidFrom, Quantity: 0.001, Side: orderer.SellSide, ParentOrderID: 0, Status: orderer.OpenedOrder, BuyPrice: level.BidTo}
+				order := orderer.Order{Price: (level.BidFrom - 30), Quantity: 0.001, Side: orderer.SellSide, ParentOrderID: 0, Status: orderer.OpenedOrder, BuyPrice: level.BidTo}
 				log.Println(fmt.Sprintf("Level was found, create order price:%f quantity%f", order.Price, order.Quantity))
 				fmt.Printf("Level was found, create order price:%f quantity%f\n", order.Price, order.Quantity)
 				orderID, createOrderErr := binanceservice.CreateOrder(order)
@@ -125,7 +125,7 @@ func main() {
 				log.Println(fmt.Sprintf("Opened order binanceid=%v was closed", order.ExternalID))
 				fmt.Printf("Opened order binanceid=%v was closed\n", order.ExternalID)
 				if openedOrders[0].ParentOrderID == 0 {
-					order := orderer.Order{Price: (openedOrders[0].Price - 25), Quantity: 0.001, Side: orderer.BuySide, StopPrice: (openedOrders[0].BuyPrice + 15), StopPriceLimit: (openedOrders[0].BuyPrice + 20), ParentOrderID: openedOrders[0].ID, Status: orderer.OpenedOrder}
+					order := orderer.Order{Price: (openedOrders[0].Price - 100), Quantity: 0.001, Side: orderer.BuySide, StopPrice: (openedOrders[0].BuyPrice + 20), StopPriceLimit: (openedOrders[0].BuyPrice + 30), ParentOrderID: openedOrders[0].ID, Status: orderer.OpenedOrder}
 					log.Println(fmt.Sprintf("It was an order to sell BTC. Create OCO order price:%f quantity:%f stopPrice:%f stopPriceLimit:%f", order.Price, order.Quantity, order.StopPrice, order.StopPriceLimit))
 					fmt.Printf("It was an order to sell BTC. Create OCO order price:%f quantity:%f stopPrice:%f stopPriceLimit:%f\n", order.Price, order.Quantity, order.StopPrice, order.StopPriceLimit)
 					orderID, err := binanceservice.CreateOcoOrder(order)
