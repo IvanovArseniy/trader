@@ -19,7 +19,6 @@ func main() {
 	}
 	defer f.Close()
 	log.SetOutput(f)
-	log.Println("This is a test log entry")
 
 	for {
 		log.Println("------------------------------------------------")
@@ -76,14 +75,14 @@ func main() {
 				log.Println(fmt.Sprintf("Order was created on binance, id=%v", orderID))
 				fmt.Printf("Order was created on binance, id=%v\n", orderID)
 				order.ExternalID = orderID
-				dbOrderID, err := postgresservice.CreateOrder(order)
+				err = postgresservice.CreateOrder(order)
 				if err != nil {
 					log.Println(fmt.Sprintf("Error occured %v", err))
 					fmt.Printf("Error occured %v\n", err)
 					continue
 				}
-				log.Println(fmt.Sprintf("Order was created in database, id=%v", dbOrderID))
-				fmt.Printf("Order was created in database, id=%v\n", dbOrderID)
+				log.Println(fmt.Sprintf("Order was created in database"))
+				fmt.Printf("Order was created in database\n")
 			}
 		} else if len(openedOrders) == 1 {
 			log.Println(fmt.Sprintf("Get info from binance for order binanceid=%v", openedOrders[0].ExternalID))
@@ -126,7 +125,7 @@ func main() {
 				log.Println(fmt.Sprintf("Opened order binanceid=%v was closed", order.ExternalID))
 				fmt.Printf("Opened order binanceid=%v was closed\n", order.ExternalID)
 				if openedOrders[0].ParentOrderID == 0 {
-					order := orderer.Order{Price: (openedOrders[0].Price - 20), Quantity: 0.001, Side: orderer.BuySide, StopPrice: (openedOrders[0].Price + 30), StopPriceLimit: (openedOrders[0].Price + 25), ParentOrderID: openedOrders[0].ID, Status: orderer.OpenedOrder}
+					order := orderer.Order{Price: (openedOrders[0].Price - 20), Quantity: 0.001, Side: orderer.BuySide, StopPrice: (openedOrders[0].Price + 25), StopPriceLimit: (openedOrders[0].Price + 30), ParentOrderID: openedOrders[0].ID, Status: orderer.OpenedOrder}
 					log.Println(fmt.Sprintf("It was an order to sell BTC. Create OCO order price:%f quantity:%f stopPrice:%f stopPriceLimit:%f", order.Price, order.Quantity, order.StopPrice, order.StopPriceLimit))
 					fmt.Printf("It was an order to sell BTC. Create OCO order price:%f quantity:%f stopPrice:%f stopPriceLimit:%f\n", order.Price, order.Quantity, order.StopPrice, order.StopPriceLimit)
 					orderID, err := binanceservice.CreateOcoOrder(order)
@@ -138,14 +137,14 @@ func main() {
 					log.Println(fmt.Sprintf("OCO order was created, binanceid=%v", orderID))
 					fmt.Printf("OCO order was created, binanceid=%v\n", orderID)
 					order.ExternalID = orderID
-					dbOrderID, err := postgresservice.CreateOrder(order)
+					err = postgresservice.CreateOrder(order)
 					if err != nil {
 						log.Println(fmt.Sprintf("Error occured %v", err))
 						fmt.Printf("Error occured %v\n", err)
 						continue
 					}
-					log.Println(fmt.Sprintf("OCO order was created in database, id=%v", dbOrderID))
-					fmt.Printf("OCO order was created in database, id=%v\n", dbOrderID)
+					log.Println(fmt.Sprintf("OCO order was created in database"))
+					fmt.Printf("OCO order was created in database\n")
 				}
 			}
 		} else {

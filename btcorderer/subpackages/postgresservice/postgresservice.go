@@ -70,7 +70,7 @@ func GetOpenedOrders() (orders []orderer.Order, err error) {
 }
 
 //CreateOrder function saves order to database
-func CreateOrder(order orderer.Order) (orderID int64, err error) {
+func CreateOrder(order orderer.Order) (err error) {
 	configuration := orderer.Configuration{}
 	err = gonfig.GetConf("config/config.json", &configuration)
 	if err != nil {
@@ -83,11 +83,10 @@ func CreateOrder(order orderer.Order) (orderID int64, err error) {
 	}
 	defer db.Close()
 
-	result, err := db.Exec("insert into \"Order\" (\"parentId\", \"price\", \"quantity\", \"status\",\"side\", \"externalid\") values ($1, $2, $3, $4, $5, $6)", order.ParentOrderID, order.Price, order.Quantity, order.Status, order.Side, order.ExternalID)
+	_, err = db.Exec("insert into \"Order\" (\"parentId\", \"price\", \"quantity\", \"status\",\"side\", \"externalid\") values ($1, $2, $3, $4, $5, $6)", order.ParentOrderID, order.Price, order.Quantity, order.Status, order.Side, order.ExternalID)
 	if err != nil {
 		return
 	}
-	orderID, err = result.LastInsertId()
 	return
 }
 
