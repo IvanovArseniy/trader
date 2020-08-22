@@ -51,7 +51,7 @@ func GetOpenedOrders() (orders []orderer.Order, err error) {
 	}
 	defer db.Close()
 
-	rows, err := db.Query("select \"Id\", \"parentId\", \"price\", \"quantity\", \"status\", \"side\", \"externalid\" from \"Order\" where \"status\" = 1")
+	rows, err := db.Query("select \"Id\", \"parentId\", \"price\", \"quantity\", \"status\", \"side\", \"externalid\", \"buyprice\" from \"Order\" where \"status\" = 1")
 	if err != nil {
 		return
 	}
@@ -59,7 +59,7 @@ func GetOpenedOrders() (orders []orderer.Order, err error) {
 
 	for rows.Next() {
 		order := orderer.Order{}
-		scanErr := rows.Scan(&order.ID, &order.ParentOrderID, &order.Price, &order.Quantity, &order.Status, &order.Side, &order.ExternalID)
+		scanErr := rows.Scan(&order.ID, &order.ParentOrderID, &order.Price, &order.Quantity, &order.Status, &order.Side, &order.ExternalID, &order.BuyPrice)
 		if scanErr != nil {
 			err = scanErr
 			continue
@@ -83,7 +83,7 @@ func CreateOrder(order orderer.Order) (err error) {
 	}
 	defer db.Close()
 
-	_, err = db.Exec("insert into \"Order\" (\"parentId\", \"price\", \"quantity\", \"status\",\"side\", \"externalid\") values ($1, $2, $3, $4, $5, $6)", order.ParentOrderID, order.Price, order.Quantity, order.Status, order.Side, order.ExternalID)
+	_, err = db.Exec("insert into \"Order\" (\"parentId\", \"price\", \"quantity\", \"status\",\"side\", \"externalid\", \"buyprice\") values ($1, $2, $3, $4, $5, $6, $7)", order.ParentOrderID, order.Price, order.Quantity, order.Status, order.Side, order.ExternalID, order.BuyPrice)
 	if err != nil {
 		return
 	}

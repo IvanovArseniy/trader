@@ -35,6 +35,7 @@ type Order struct {
 	Quantity       float64
 	Side           OrderSide
 	ExternalID     int64
+	BuyPrice       float64
 }
 
 //OrderStatus is Opened and Closed
