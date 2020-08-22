@@ -12,6 +12,7 @@ import (
 
 func main() {
 	fmt.Printf("Orderer started\n")
+
 	f, err := os.OpenFile("testlogfile", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatalf("error opening file: %v", err)
@@ -85,6 +86,8 @@ func main() {
 				fmt.Printf("Order was created in database, id=%v\n", dbOrderID)
 			}
 		} else if len(openedOrders) == 1 {
+			log.Println(fmt.Sprintf("Get info from binance for order binanceid=%v", openedOrders[0].ExternalID))
+			fmt.Printf("Get info from binance for order binanceid=%v", openedOrders[0].ExternalID)
 			order, err := binanceservice.GetOrder(openedOrders[0].ExternalID)
 			if err != nil {
 				log.Println(fmt.Sprintf("Error occured %v", err))
@@ -93,6 +96,21 @@ func main() {
 			}
 			log.Println(fmt.Sprintf("Opened order was found, binanceID=%v status=%v", order.ExternalID, order.Status))
 			fmt.Printf("Opened order was found, binanceID=%v status=%v\n", order.ExternalID, order.Status)
+			if order.Status != openedOrders[0].Status && order.Status == orderer.CanceledOrder {
+				result, err := postgresservice.CloseOrder(openedOrders[0].ID)
+				if err != nil {
+					log.Println(fmt.Sprintf("Error occured %v", err))
+					fmt.Printf("Error occured %v\n", err)
+					continue
+				}
+				if !result {
+					log.Println("Error occuder Order do not closed in database")
+					fmt.Printf("Error occuder Order do not closed in database\n")
+					continue
+				}
+				log.Println(fmt.Sprintf("Opened order binanceid=%v was cancelled", order.ExternalID))
+				fmt.Printf("Opened order binanceid=%v was cancelled\n", order.ExternalID)
+			}
 			if order.Status != openedOrders[0].Status && order.Status == orderer.ClosedOrder {
 				result, err := postgresservice.CloseOrder(openedOrders[0].ID)
 				if err != nil {
@@ -107,7 +125,7 @@ func main() {
 				}
 				log.Println(fmt.Sprintf("Opened order binanceid=%v was closed", order.ExternalID))
 				fmt.Printf("Opened order binanceid=%v was closed\n", order.ExternalID)
-				if openedOrders[0].ParentOrderID == 0 && order.Status == orderer.ClosedOrder {
+				if openedOrders[0].ParentOrderID == 0 {
 					order := orderer.Order{Price: (openedOrders[0].Price - 20), Quantity: 0.001, Side: orderer.BuySide, StopPrice: (openedOrders[0].Price + 30), StopPriceLimit: (openedOrders[0].Price + 25), ParentOrderID: openedOrders[0].ID, Status: orderer.OpenedOrder}
 					log.Println(fmt.Sprintf("It was an order to sell BTC. Create OCO order price:%f quantity:%f stopPrice:%f stopPriceLimit:%f", order.Price, order.Quantity, order.StopPrice, order.StopPriceLimit))
 					fmt.Printf("It was an order to sell BTC. Create OCO order price:%f quantity:%f stopPrice:%f stopPriceLimit:%f\n", order.Price, order.Quantity, order.StopPrice, order.StopPriceLimit)

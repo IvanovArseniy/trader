@@ -184,8 +184,6 @@ func getIDByStatus(status string) (orderstatus orderer.OrderStatus) {
 
 //GetOrder function get order from binance by ID
 func GetOrder(orderID int64) (order orderer.Order, err error) {
-	// https://github.com/binance-exchange/binance-official-api-docs/blob/master/rest-api.md#order-book
-	// https://academy.binance.com/tutorials/what-is-an-oco-order
 	configuration := orderer.Configuration{}
 	err = gonfig.GetConf("config/config.json", &configuration)
 	if err != nil {
@@ -228,7 +226,7 @@ func GetOrder(orderID int64) (order orderer.Order, err error) {
 	if err != nil {
 		return
 	}
-	order = orderer.Order{Price: binanceOrder.Price, Quantity: binanceOrder.OrigQty, Status: getIDByStatus(binanceOrder.Status), Side: getIDBySide(binanceOrder.Side)}
+	order = orderer.Order{Price: binanceOrder.Price, Quantity: binanceOrder.OrigQty, Status: getIDByStatus(binanceOrder.Status), Side: getIDBySide(binanceOrder.Side), ExternalID: binanceOrder.ID}
 	return
 }
 
