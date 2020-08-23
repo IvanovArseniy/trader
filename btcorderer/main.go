@@ -86,7 +86,7 @@ func main() {
 			}
 		} else if len(openedOrders) == 1 {
 			log.Println(fmt.Sprintf("Get info from binance for order binanceid=%v", openedOrders[0].ExternalID))
-			fmt.Printf("Get info from binance for order binanceid=%v", openedOrders[0].ExternalID)
+			fmt.Printf("Get info from binance for order binanceid=%v\n", openedOrders[0].ExternalID)
 			order, err := binanceservice.GetOrder(openedOrders[0].ExternalID)
 			if err != nil {
 				log.Println(fmt.Sprintf("Error occured %v", err))
