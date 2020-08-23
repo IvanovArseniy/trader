@@ -125,7 +125,18 @@ func main() {
 				log.Println(fmt.Sprintf("Opened order binanceid=%v was closed", order.ExternalID))
 				fmt.Printf("Opened order binanceid=%v was closed\n", order.ExternalID)
 				if openedOrders[0].ParentOrderID == 0 {
-					order := orderer.Order{Price: (openedOrders[0].Price - 100), Quantity: 0.001, Side: orderer.BuySide, StopPrice: (openedOrders[0].BuyPrice + 20), StopPriceLimit: (openedOrders[0].BuyPrice + 30), ParentOrderID: openedOrders[0].ID, Status: orderer.OpenedOrder}
+					stopPriceLimit := (openedOrders[0].BuyPrice + 30)
+					s := int64(stopPriceLimit) % 100
+					if s > 95 {
+						stopPriceLimit = float64(int64(stopPriceLimit)/100*100 + 103)
+					}
+
+					buyPrice := (openedOrders[0].Price - 100)
+					b := int64(buyPrice) % 100
+					if b > 95 {
+						buyPrice = float64(int64(buyPrice)/100*100 + 103)
+					}
+					order := orderer.Order{Price: buyPrice, Quantity: 0.001, Side: orderer.BuySide, StopPrice: (stopPriceLimit - 10), StopPriceLimit: stopPriceLimit, ParentOrderID: openedOrders[0].ID, Status: orderer.OpenedOrder}
 					log.Println(fmt.Sprintf("It was an order to sell BTC. Create OCO order price:%f quantity:%f stopPrice:%f stopPriceLimit:%f", order.Price, order.Quantity, order.StopPrice, order.StopPriceLimit))
 					fmt.Printf("It was an order to sell BTC. Create OCO order price:%f quantity:%f stopPrice:%f stopPriceLimit:%f\n", order.Price, order.Quantity, order.StopPrice, order.StopPriceLimit)
 					orderID, err := binanceservice.CreateOcoOrder(order)
