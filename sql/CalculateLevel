@@ -23,7 +23,7 @@ delete from "Level" where "Id" IN (
 	select l1."Id" from "Level" l1
 	join "Level" l2 on 1 = 1
 	where l1."active" = 1 and l1."deleted" = 0 and l2."active" = 1 and l2."deleted" = 0 and l1."Id" != l2."Id"
-	and ((l1."bidfrom" > l2."bidfrom") and l1."bidfrom" < (l2."bidto" + 15) or (l1."bidfrom" < l2."bidfrom" and (l1."bidto" + 15) > l2."bidfrom"))
+	and ((l1."bidfrom" > l2."bidfrom") and l1."bidfrom" < (l2."bidto" + 50) or (l1."bidfrom" < l2."bidfrom" and (l1."bidto" + 50) > l2."bidfrom"))
 	and l1."bidto" < l2."bidto"
 );
 $BODY$;
