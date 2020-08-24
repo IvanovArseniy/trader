@@ -120,10 +120,10 @@ func main() {
 				if !result {
 					log.Println("Error occuder Order do not closed in database")
 					fmt.Printf("Error occuder Order do not closed in database\n")
-					continue
+				} else {
+					log.Println(fmt.Sprintf("Opened order binanceid=%v was closed", order.ExternalID))
+					fmt.Printf("Opened order binanceid=%v was closed\n", order.ExternalID)
 				}
-				log.Println(fmt.Sprintf("Opened order binanceid=%v was closed", order.ExternalID))
-				fmt.Printf("Opened order binanceid=%v was closed\n", order.ExternalID)
 				if openedOrders[0].ParentOrderID == 0 {
 					stopPriceLimit := (openedOrders[0].BuyPrice + 30)
 					s := int64(stopPriceLimit) % 100
