@@ -4,9 +4,14 @@ import (
 	"database/sql"
 	orderer "trader/btcorderer/root"
 
+	//Database import
 	_ "github.com/lib/pq"
 	"github.com/tkanos/gonfig"
 )
+
+type growth struct {
+	Price float64
+}
 
 //GetLevel try to find nearby levels for bid
 func GetLevel(bid float64) (level orderer.Level, err error) {
@@ -156,5 +161,37 @@ func CloseOrder(orderID int64) (result bool, err error) {
 		return
 	}
 	result = affRows > 0
+	return
+}
+
+//GetPriceGrowth get price growth for last 14 hours
+func GetPriceGrowth() (priceGrowth float64, err error) {
+	configuration := orderer.Configuration{}
+	err = gonfig.GetConf("config/config.json", &configuration)
+	if err != nil {
+		return
+	}
+
+	db, err := sql.Open("postgres", configuration.PostgresConnectionString)
+	if err != nil {
+		return
+	}
+	defer db.Close()
+
+	rows, err := db.Query("select max(\"endbid\") - min(\"startbid\") as \"priceGrowth\" from (select \"startbid\", \"endbid\" from \"Candle\" order by \"Id\" desc limit 14) t")
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		growth := growth{}
+		err = rows.Scan(&growth.Price)
+		if err != nil {
+			continue
+		}
+		priceGrowth = growth.Price
+		break
+	}
 	return
 }

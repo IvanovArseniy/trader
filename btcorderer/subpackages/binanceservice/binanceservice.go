@@ -71,6 +71,23 @@ type binanceOrderList struct {
 	Orders          []binanceOrder `json:"orders"`
 }
 
+type binanceTrade struct {
+	Symbol          string `json:"symbol"`
+	ID              int64  `json:"id"`
+	OrderID         int64  `json:"orderId"`
+	orderListID     int
+	Price           float64 `json:",string"`
+	Qty             float64 `json:",string"`
+	ExecutedQty     float64 `json:",string"`
+	QuoteQty        float64 `json:",string"`
+	Commission      float64 `json:",string"`
+	commissionAsset string
+	time            int64
+	IsBuyer         bool `json:"isBuyer"`
+	isMaker         bool
+	isBestMatch     bool
+}
+
 //GetTicket requests ticket data from binance
 func GetTicket() (ticket orderer.Ticket, funcErr error) {
 	url := "https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT"
@@ -384,5 +401,55 @@ func CloseOrder(orderID int64) (result bool, err error) {
 		return
 	}
 	result = getIDByStatus(binanceOrder.Status) == orderer.ClosedOrder
+	return
+}
+
+//GetTrades function get trades from binance
+func GetTrades() (trades []orderer.Trade, err error) {
+	configuration := orderer.Configuration{}
+	err = gonfig.GetConf("config/config.json", &configuration)
+	if err != nil {
+		return
+	}
+
+	url := "https://api.binance.com/api/v3/myTrades"
+	timestamp, err := GetServerTime()
+	if err != nil {
+		return
+	}
+	queryString := fmt.Sprintf("symbol=BTCUSDT&timestamp=%v", timestamp)
+	signature, err := createSignature(queryString, configuration.Secret)
+	if err != nil {
+		return
+	}
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return
+	}
+	req.Header.Set("X-MBX-APIKEY", configuration.APIKey)
+	req.URL.RawQuery = fmt.Sprintf("symbol=BTCUSDT&timestamp=%v&signature=%v", timestamp, signature)
+	binanceClient := http.Client{Timeout: 30 * time.Second}
+	resp, err := binanceClient.Do(req)
+	if err != nil {
+		return
+	}
+	if resp != nil {
+		defer resp.Body.Close()
+	} else {
+		return
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return
+	}
+	binanceTrades := []binanceTrade{}
+	err = json.Unmarshal(body, &binanceTrades)
+	if err != nil {
+		return
+	}
+	for _, t := range binanceTrades {
+		trades = append(trades, orderer.Trade{Symbol: t.Symbol, Price: t.Price, IsBuyer: t.IsBuyer})
+	}
 	return
 }

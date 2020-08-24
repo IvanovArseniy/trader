@@ -41,6 +41,16 @@ type Order struct {
 //OrderStatus is Opened and Closed
 type OrderStatus int
 
+//Trade is a trade
+type Trade struct {
+	Symbol      string
+	Price       float64
+	Qty         float64
+	ExecutedQty float64
+	QuoteQty    float64
+	IsBuyer     bool
+}
+
 const (
 	//OpenedOrder orderstatus value
 	OpenedOrder OrderStatus = 1
