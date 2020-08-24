@@ -14,13 +14,6 @@ import (
 func main() {
 	fmt.Printf("Orderer started\n")
 
-	priceGrowth, err1 := postgresservice.GetPriceGrowth()
-	if err1 != nil {
-		log.Println(fmt.Sprintf("Error occured %v", err1))
-		fmt.Printf("Error occured %v\n", err1)
-	}
-	fmt.Printf("%f", priceGrowth)
-
 	f, err := os.OpenFile("testlogfile", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatalf("error opening file: %v", err)
