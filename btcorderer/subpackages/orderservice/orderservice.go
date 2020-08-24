@@ -11,7 +11,7 @@ import (
 
 //CreateOrder function creates orders in binance and database
 func CreateOrder(level orderer.Level) (err error) {
-	order := orderer.Order{Price: (level.BidFrom - 30), Quantity: 0.001, Side: orderer.SellSide, ParentOrderID: 0, Status: orderer.OpenedOrder, BuyPrice: level.BidTo}
+	order := orderer.Order{Price: level.BidFrom, Quantity: 0.001, Side: orderer.SellSide, ParentOrderID: 0, Status: orderer.OpenedOrder, BuyPrice: level.BidTo}
 	log.Println(fmt.Sprintf("Level was found, create order price:%f quantity%f", order.Price, order.Quantity))
 	fmt.Printf("Level was found, create order price:%f quantity%f\n", order.Price, order.Quantity)
 	orderID, err := binanceservice.CreateOrder(order)
