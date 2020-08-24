@@ -24,7 +24,9 @@ func CreateOrder(level orderer.Level) (err error) {
 	err = postgresservice.CreateOrder(order)
 	if err != nil {
 		binanceservice.CloseOrder(int64(orderID))
-		panic(fmt.Sprintf("Critical error occured %v. Program terminated", err))
+		log.Println(fmt.Sprintf("Forced to close order"))
+		fmt.Printf("Forced to close order\n")
+		return
 	}
 	log.Println(fmt.Sprintf("Order was created in database"))
 	fmt.Printf("Order was created in database\n")
