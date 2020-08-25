@@ -7,7 +7,7 @@ CREATE OR REPLACE PROCEDURE public."CalculateLevel"(
 LANGUAGE 'sql'
 AS $BODY$
 insert into "Level" ("type", "bidfrom", "bidto", "expired")
-select  2, ((GREATEST(c2."minbid", c3."minbid") + GREATEST(c2."endbid", c3."startbid")) / 2), GREATEST(c2."endbid", c3."startbid"), (now() + (3 * interval '1 month'))
+select  2, ((LEAST(c1."startbid", c1."endbid") + LEAST(c2."startbid", c2."endbid") + LEAST(c3."startbid", c3."endbid") + LEAST(c4."startbid", c4."endbid")) / 4), GREATEST(c2."endbid", c3."startbid"), (now() + (3 * interval '1 month'))
 from "Candle" c1
 join "Candle" c2 on c2."Id" = (c1."Id" + 1)
 join "Candle" c3 on c3."Id" = (c2."Id" + 1)
