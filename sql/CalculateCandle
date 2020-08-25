@@ -6,7 +6,6 @@ CREATE OR REPLACE PROCEDURE public."CalculateCandle"(
 	)
 LANGUAGE 'sql'
 AS $BODY$
-delete from "RateHistory" where "createdon" < (CURRENT_DATE - '10 day'::INTERVAL);
 insert into "Candle" ("active", "month", "day", "hour", "minuteperiod", "startbid",  "maxbid", "minbid", "endbid")
 select 0, "month", "day", "hour", 0, (select bid from "RateHistory" where createdon = startcreatedon limit 1) as startbid, maxbid, minbid, (select bid from "RateHistory" where createdon = endcreatedon limit 1) as endbid from (
 	select "month", "day", "hour",  Min(bid) as minbid, max(bid) as maxbid, min(createdon) as startcreatedon, max(createdon) as endcreatedon from (
