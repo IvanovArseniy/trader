@@ -178,7 +178,7 @@ func GetPriceGrowth() (priceGrowth float64, err error) {
 	}
 	defer db.Close()
 
-	rows, err := db.Query("select max(\"endbid\") - min(\"startbid\") as \"priceGrowth\" from (select \"startbid\", \"endbid\" from \"Candle\" order by \"Id\" desc limit 14) t")
+	rows, err := db.Query("select max(\"endbid\") - min(\"startbid\") as \"priceGrowth\" from (select \"startbid\", \"endbid\" from \"Candle\" order by \"Id\" desc limit 20) t")
 	if err != nil {
 		return
 	}
