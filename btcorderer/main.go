@@ -104,7 +104,7 @@ func main() {
 						closePrice = openedOrders[0].Price
 					}
 					log.Println(fmt.Sprintf("Close price i %f", closePrice))
-					fmt.Printf("Close price i %f", closePrice)
+					fmt.Printf("Close price %f\n", closePrice)
 
 					priceGrowth, err := postgresservice.GetPriceGrowth(closePrice)
 					if err != nil {
