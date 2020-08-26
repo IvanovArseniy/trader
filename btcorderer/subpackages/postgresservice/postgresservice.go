@@ -33,7 +33,7 @@ func GetLevel(bid float64) (level orderer.Level, err error) {
 	}
 	defer db.Close()
 
-	rows, err := db.Query("select \"Id\", \"bidfrom\", \"bidto\" from \"Level\" where (\"bidto\") > $1 and (\"bidfrom\" - $2) < $1 and \"active\" = 1 and \"deleted\" = 0", bid, tradeConfig.GetLevelBottomGap)
+	rows, err := db.Query("select \"Id\", \"bidfrom\", \"bidto\" from \"Level\" where (\"bidfrom\") < $1 and (\"bidfrom\" + $2) > $1 and \"active\" = 1 and \"deleted\" = 0", bid, tradeConfig.GetLevelBottomGap)
 	if err != nil {
 		return
 	}
