@@ -57,7 +57,7 @@ func CloseOrder(orderID int64) (result bool, err error) {
 
 //CreateOrderWithSlopLoss function creates buy order and stoploss order
 func CreateOrderWithSlopLoss(closePrice float64, priceGrowth float64, levelMaxPrice float64, parentOrderID int64) (err error) {
-	stopPriceLimit := (levelMaxPrice + 30)
+	stopPriceLimit := (levelMaxPrice + 100)
 	s := int64(stopPriceLimit) % 100
 	if s > 95 {
 		stopPriceLimit = float64(int64(stopPriceLimit)/100*100 + 103)
