@@ -21,13 +21,19 @@ func GetLevel(bid float64) (level orderer.Level, err error) {
 		return
 	}
 
+	tradeConfig := orderer.TradeConfiguration{}
+	err = gonfig.GetConf("config/tradeConfig.json", &tradeConfig)
+	if err != nil {
+		return
+	}
+
 	db, err := sql.Open("postgres", configuration.PostgresConnectionString)
 	if err != nil {
 		return
 	}
 	defer db.Close()
 
-	rows, err := db.Query("select \"Id\", \"bidfrom\", \"bidto\" from \"Level\" where (\"bidto\") > $1 and (\"bidfrom\" - 30) < $1 and \"active\" = 1 and \"deleted\" = 0", bid)
+	rows, err := db.Query("select \"Id\", \"bidfrom\", \"bidto\" from \"Level\" where (\"bidto\") > $1 and (\"bidfrom\" - $2) < $1 and \"active\" = 1 and \"deleted\" = 0", bid, tradeConfig.GetLevelBottomGap)
 	if err != nil {
 		return
 	}
@@ -172,13 +178,19 @@ func GetPriceGrowth(closePrice float64) (priceGrowth float64, err error) {
 		return
 	}
 
+	tradeConfig := orderer.TradeConfiguration{}
+	err = gonfig.GetConf("config/tradeConfig.json", &tradeConfig)
+	if err != nil {
+		return
+	}
+
 	db, err := sql.Open("postgres", configuration.PostgresConnectionString)
 	if err != nil {
 		return
 	}
 	defer db.Close()
 
-	rows, err := db.Query("select min(\"endbid\") as \"priceGrowth\" from (select \"startbid\", \"endbid\" from \"Candle\" order by \"Id\" desc limit 20) t")
+	rows, err := db.Query("select min(\"endbid\") as \"priceGrowth\" from (select \"startbid\", \"endbid\" from \"Candle\" order by \"Id\" desc limit $1) t", tradeConfig.GetPriceGrowthLimit)
 	if err != nil {
 		return
 	}

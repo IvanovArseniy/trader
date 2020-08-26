@@ -7,11 +7,23 @@ import (
 	orderer "trader/btcorderer/root"
 	"trader/btcorderer/subpackages/binanceservice"
 	"trader/btcorderer/subpackages/postgresservice"
+
+	"github.com/tkanos/gonfig"
 )
 
 //CreateOrder function creates orders in binance and database
 func CreateOrder(level orderer.Level) (err error) {
-	order := orderer.Order{Price: level.BidFrom, Quantity: 0.001, Side: orderer.SellSide, ParentOrderID: 0, Status: orderer.OpenedOrder, BuyPrice: level.BidTo}
+	tradeConfig := orderer.TradeConfiguration{}
+	err = gonfig.GetConf("config/tradeConfig.json", &tradeConfig)
+	if err != nil {
+		return
+	}
+
+	order := orderer.Order{Price: level.BidFrom, Quantity: tradeConfig.Quantity, Side: orderer.SellSide, ParentOrderID: 0, Status: orderer.OpenedOrder, BuyPrice: level.BidTo}
+	p := int64(order.Price) % tradeConfig.RoundPriceBase
+	if p < tradeConfig.RoundPriceLimiter {
+		order.Price = float64(int64(order.Price)/100*100 - tradeConfig.RoundPriceAddition)
+	}
 	log.Println(fmt.Sprintf("Level was found, create order price:%f quantity%f", order.Price, order.Quantity))
 	fmt.Printf("Level was found, create order price:%f quantity%f\n", order.Price, order.Quantity)
 	orderID, err := binanceservice.CreateOrder(order)
@@ -57,18 +69,24 @@ func CloseOrder(orderID int64) (result bool, err error) {
 
 //CreateOrderWithSlopLoss function creates buy order and stoploss order
 func CreateOrderWithSlopLoss(closePrice float64, priceGrowth float64, levelMaxPrice float64, parentOrderID int64) (err error) {
-	stopPriceLimit := (levelMaxPrice + 100)
-	s := int64(stopPriceLimit) % 100
-	if s > 95 {
-		stopPriceLimit = float64(int64(stopPriceLimit)/100*100 + 103)
+	tradeConfig := orderer.TradeConfiguration{}
+	err = gonfig.GetConf("config/tradeConfig.json", &tradeConfig)
+	if err != nil {
+		return
 	}
 
-	buyPrice := (closePrice - (priceGrowth / 2.1))
-	b := int64(buyPrice) % 100
-	if b > 95 {
-		buyPrice = float64(int64(buyPrice)/100*100 + 103)
+	stopPriceLimit := (levelMaxPrice + tradeConfig.StopPriceAddition)
+	s := int64(stopPriceLimit) % tradeConfig.RoundPriceBase
+	if s > (tradeConfig.RoundPriceBase - tradeConfig.RoundPriceLimiter) {
+		stopPriceLimit = float64(int64(stopPriceLimit)/100*100 + (tradeConfig.RoundPriceBase + tradeConfig.RoundPriceAddition))
 	}
-	order := orderer.Order{Price: buyPrice, Quantity: 0.001, Side: orderer.BuySide, StopPrice: (stopPriceLimit - 10), StopPriceLimit: stopPriceLimit, ParentOrderID: parentOrderID, Status: orderer.OpenedOrder}
+
+	buyPrice := (closePrice - (priceGrowth / tradeConfig.PriceGrowthCoef))
+	b := int64(buyPrice) % tradeConfig.RoundPriceBase
+	if b > (tradeConfig.RoundPriceBase - tradeConfig.RoundPriceLimiter) {
+		buyPrice = float64(int64(buyPrice)/100*100 + (tradeConfig.RoundPriceBase + tradeConfig.RoundPriceAddition))
+	}
+	order := orderer.Order{Price: buyPrice, Quantity: tradeConfig.Quantity, Side: orderer.BuySide, StopPrice: (stopPriceLimit - tradeConfig.StopPriceGapForOrder), StopPriceLimit: stopPriceLimit, ParentOrderID: parentOrderID, Status: orderer.OpenedOrder}
 	log.Println(fmt.Sprintf("It was an order to sell BTC. Create OCO order price:%f quantity:%f stopPrice:%f stopPriceLimit:%f", order.Price, order.Quantity, order.StopPrice, order.StopPriceLimit))
 	fmt.Printf("It was an order to sell BTC. Create OCO order price:%f quantity:%f stopPrice:%f stopPriceLimit:%f\n", order.Price, order.Quantity, order.StopPrice, order.StopPriceLimit)
 	orderID, err := binanceservice.CreateOcoOrder(order)

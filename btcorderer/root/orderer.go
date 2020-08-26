@@ -9,6 +9,20 @@ type Configuration struct {
 	PostgresConnectionString string
 }
 
+//TradeConfiguration is a configuration element from tradeConfig.json
+type TradeConfiguration struct {
+	RunInterval          int64
+	RoundPriceLimiter    int64
+	RoundPriceAddition   int64
+	RoundPriceBase       int64
+	Quantity             float64
+	StopPriceAddition    float64
+	PriceGrowthCoef      float64
+	StopPriceGapForOrder float64
+	GetLevelBottomGap    int64
+	GetPriceGrowthLimit  int64
+}
+
 // Ticket is an element with ask and bid in some moment
 type Ticket struct {
 	ID        int64

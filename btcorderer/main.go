@@ -9,6 +9,8 @@ import (
 	"trader/btcorderer/subpackages/binanceservice"
 	"trader/btcorderer/subpackages/orderservice"
 	"trader/btcorderer/subpackages/postgresservice"
+
+	"github.com/tkanos/gonfig"
 )
 
 func main() {
@@ -21,10 +23,16 @@ func main() {
 	defer f.Close()
 	log.SetOutput(f)
 
+	tradeConfig := orderer.TradeConfiguration{}
+	err = gonfig.GetConf("config/tradeConfig.json", &tradeConfig)
+	if err != nil {
+		return
+	}
+
 	for {
 		log.Println("------------------------------------------------")
 		fmt.Printf("------------------------------------------------\n")
-		time.Sleep(10 * time.Second)
+		time.Sleep(time.Duration(tradeConfig.RunInterval) * time.Second)
 		openedOrders, err := postgresservice.GetOpenedOrders()
 		if err != nil {
 			log.Println(fmt.Sprintf("Error occured %v", err))
