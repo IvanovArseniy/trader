@@ -165,7 +165,7 @@ func CloseOrder(orderID int64) (result bool, err error) {
 }
 
 //GetPriceGrowth get price growth for last 14 hours
-func GetPriceGrowth() (priceGrowth float64, err error) {
+func GetPriceGrowth(closePrice float64) (priceGrowth float64, err error) {
 	configuration := orderer.Configuration{}
 	err = gonfig.GetConf("config/config.json", &configuration)
 	if err != nil {
@@ -178,7 +178,7 @@ func GetPriceGrowth() (priceGrowth float64, err error) {
 	}
 	defer db.Close()
 
-	rows, err := db.Query("select max(\"endbid\") - min(\"startbid\") as \"priceGrowth\" from (select \"startbid\", \"endbid\" from \"Candle\" order by \"Id\" desc limit 20) t")
+	rows, err := db.Query("select min(\"endbid\") as \"priceGrowth\" from (select \"startbid\", \"endbid\" from \"Candle\" order by \"Id\" desc limit 20) t")
 	if err != nil {
 		return
 	}
@@ -190,7 +190,7 @@ func GetPriceGrowth() (priceGrowth float64, err error) {
 		if err != nil {
 			continue
 		}
-		priceGrowth = growth.Price
+		priceGrowth = closePrice - growth.Price
 		break
 	}
 	return

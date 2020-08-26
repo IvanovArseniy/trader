@@ -15,10 +15,9 @@ join "Candle" c4 on c4."Id" = (c3."Id" + 1)
 join "Candle" c5 on c5."Id" = (c4."Id" + 1)
 join "Candle" c6 on c6."Id" = (c5."Id" + 1)
 join "Candle" c7 on c7."Id" = (c6."Id" + 1)
-join "Candle" c8 on c8."Id" = (c7."Id" + 1)
 where c1."startbid" < c1."endbid" and c2."startbid" < c2."endbid"
 	and c3."startbid" > c3."endbid" and c4."endbid" < c3."startbid"
-	and c5."endbid" < GREATEST(c2."endbid", c3."startbid") and c6."endbid" < GREATEST(c2."endbid", c3."startbid") and c7."endbid" < GREATEST(c2."endbid", c3."startbid") and c8."endbid" < GREATEST(c2."endbid", c3."startbid")
+	and c5."endbid" < GREATEST(c2."endbid", c3."startbid") and c6."endbid" < GREATEST(c2."endbid", c3."startbid") and c7."endbid" < GREATEST(c2."endbid", c3."startbid")
 	and (select count(*) from "Candle" where "startbid" > c2."endbid" and "endbid" > c2."endbid" and "startbid" > c3."endbid" and "endbid" > c3."endbid" and "Id" > c2."Id" and "Id" > c3."Id" ) < 6;
 
 update "Level" set "deleted" = 1 where "active" = 1;

@@ -106,7 +106,7 @@ func main() {
 					log.Println(fmt.Sprintf("Close price i %f", closePrice))
 					fmt.Printf("Close price i %f", closePrice)
 
-					priceGrowth, err := postgresservice.GetPriceGrowth()
+					priceGrowth, err := postgresservice.GetPriceGrowth(closePrice)
 					if err != nil {
 						log.Println(fmt.Sprintf("Error occured %v", err))
 						fmt.Printf("Error occured %v\n", err)
