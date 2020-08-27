@@ -65,11 +65,6 @@ func main() {
 			fmt.Printf("Cant find level for this ticket\n")
 		}
 
-		if level == (orderer.Level{}) {
-			log.Println(fmt.Sprintf("Level wasnt found, close opened sell orders"))
-			fmt.Printf("Level wasnt found, close opened sell orders\n")
-			orderservice.CloseOpenedSellOrders()
-		}
 		if len(openedOrders) == 0 {
 			if level != (orderer.Level{}) {
 				err = orderservice.CreateOrder(level)
@@ -97,8 +92,7 @@ func main() {
 					fmt.Printf("Error occured %v\n", err)
 					continue
 				}
-			}
-			if order.Status != openedOrders[0].Status && order.Status == orderer.ClosedOrder {
+			} else if order.Status != openedOrders[0].Status && order.Status == orderer.ClosedOrder {
 				_, err := orderservice.CloseOrder(openedOrders[0].ID)
 				if err != nil {
 					log.Println(fmt.Sprintf("Error occured %v", err))
@@ -129,7 +123,14 @@ func main() {
 						fmt.Printf("Error occured %v\n", err)
 						continue
 					}
+				} else {
+					if level == (orderer.Level{}) {
+						log.Println(fmt.Sprintf("Level wasnt found, close opened sell orders"))
+						fmt.Printf("Level wasnt found, close opened sell orders\n")
+						orderservice.CloseOpenedSellOrders()
+					}
 				}
+
 			}
 		} else {
 			log.Println(fmt.Sprintf("Something gone wrong, close all sell orders"))
