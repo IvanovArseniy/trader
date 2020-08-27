@@ -123,14 +123,13 @@ func main() {
 						fmt.Printf("Error occured %v\n", err)
 						continue
 					}
-				} else {
-					if level == (orderer.Level{}) {
-						log.Println(fmt.Sprintf("Level wasnt found, close opened sell orders"))
-						fmt.Printf("Level wasnt found, close opened sell orders\n")
-						orderservice.CloseOpenedSellOrders()
-					}
 				}
-
+			} else {
+				if level == (orderer.Level{}) {
+					log.Println(fmt.Sprintf("Level wasnt found, close opened sell orders"))
+					fmt.Printf("Level wasnt found, close opened sell orders\n")
+					orderservice.CloseOpenedSellOrders()
+				}
 			}
 		} else {
 			log.Println(fmt.Sprintf("Something gone wrong, close all sell orders"))
