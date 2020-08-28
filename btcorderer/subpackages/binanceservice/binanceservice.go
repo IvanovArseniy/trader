@@ -400,7 +400,7 @@ func CloseOrder(orderID int64) (result bool, err error) {
 	if err != nil {
 		return
 	}
-	result = getIDByStatus(binanceOrder.Status) == orderer.ClosedOrder
+	result = getIDByStatus(binanceOrder.Status) == orderer.ClosedOrder || getIDByStatus(binanceOrder.Status) == orderer.CanceledOrder
 	return
 }
 

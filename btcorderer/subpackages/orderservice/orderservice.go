@@ -108,12 +108,22 @@ func CreateOrderWithSlopLoss(closePrice float64, priceGrowth float64, levelMaxPr
 //CloseOpenedSellOrders function closes all opened sell orders
 func CloseOpenedSellOrders() {
 	orderIDs, err := postgresservice.CloseOpenedSellOrders()
+	log.Println(fmt.Sprintf("%v orders was closed", len(orderIDs)))
+	fmt.Printf("%v orders was closed\n", len(orderIDs))
 	if err != nil {
-		return
+		log.Println(fmt.Sprintf("Error occured %v", err))
+		fmt.Printf("Error occured %v\n", err)
 	}
 	for _, orderID := range orderIDs {
-		binanceservice.CloseOrder(int64(orderID))
+		res, err := binanceservice.CloseOrder(int64(orderID))
+		log.Println(fmt.Sprintf("Close binance order result=%v", res))
+		fmt.Printf("Close binance order result=%v\n", res)
+		if err != nil {
+			log.Println(fmt.Sprintf("Error occured %v", err))
+			fmt.Printf("Error occured %v\n", err)
+		}
 	}
+	return
 }
 
 //GetClosePrice function get real close price of last sell order
