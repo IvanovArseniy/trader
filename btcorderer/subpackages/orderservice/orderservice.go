@@ -82,6 +82,9 @@ func CreateOrderWithSlopLoss(closePrice float64, priceGrowth float64, levelMaxPr
 	}
 
 	buyPrice := (closePrice - (priceGrowth / tradeConfig.PriceGrowthCoef))
+	if (priceGrowth / tradeConfig.PriceGrowthCoef) < float64(50) {
+		buyPrice = (closePrice - float64(70))
+	}
 	b := int64(buyPrice) % tradeConfig.RoundPriceBase
 	if b > (tradeConfig.RoundPriceBase - tradeConfig.RoundPriceLimiter) {
 		buyPrice = float64(int64(buyPrice)/100*100 + (tradeConfig.RoundPriceBase + tradeConfig.RoundPriceAddition))

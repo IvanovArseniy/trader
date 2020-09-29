@@ -1,0 +1,159 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<script src="https://code.jquery.com/jquery-latest.min.js"></script>
+<script>
+function showChart () {
+	var candles = [];
+	var candlesLoaded = false;
+	var levels = [];
+	var levelsLoaded = false;
+	var orders = []
+
+	$.ajax('http://localhost:8080/levels/', {
+    success: function (data) {
+		for(var i = 0; i < data.length; i++) {
+			levels.push({ from: data[i].BidFrom, to: data[i].BidTo })
+		}
+		levelsLoaded = true;
+    },
+    error: function (jqXhr, textStatus, errorMessage) {
+    }
+	});
+
+	$.ajax('http://localhost:8080/candles/', {
+    success: function (data) {
+		for(var i = 0; i < data.length; i++) {
+			if(data[i].StartBid != 0) {
+				candles.push({ x: (i), y: [data[i].StartBid, data[i].MaxBid, data[i].MinBid, data[i].EndBid] })
+			}
+		}
+		candlesLoaded = true;
+		document.title = "BTC " + data[data.length - 1].EndBid;
+    },
+    error: function (jqXhr, textStatus, errorMessage) {
+    }
+	});
+
+	$.ajax('http://localhost:8080/orders/', {
+    success: function (data) {
+		for(var i = 0; i < data.length; i++) {
+			orders.push(data[i].Price)
+		}
+    },
+    error: function (jqXhr, textStatus, errorMessage) {
+    }
+	});
+
+	setTimeout(function() {
+		var levelLines = [];
+		var chartData = [];
+		var orderData = [];
+
+		chartData.push({
+			type: "candlestick",
+			showInLegend: true,
+			name: "Stock Price",
+			yValueFormatString: "$#,##0.00",
+			xValueFormatString: "#",
+			dataPoints: candles
+		});
+
+		if(orders.length > 0) {
+			for(k = 0; k < orders.length; k++) {
+				orderData = [];
+				orderData.push({x: candles.length, y: orders[k]});
+				chartData.push({
+						type: "line",
+						showInLegend: true,
+						name: "Order",
+						yValueFormatString: "$#,##0.00",
+						xValueFormatString: "#",
+						options: {
+							pointRadius: 4
+						},
+						dataPoints: orderData
+					});
+			}
+		}
+
+		for(var i = 0; i < levels.length; i++) {
+			var levelStarts = [];
+			var levelEnds  = [];
+			for(j = 0; j < candles.length; j++) {
+				levelStarts.push({ x: (j + 1), y: levels[i].from });
+				levelEnds.push({ x: (j + 1), y: levels[i].to });
+			}
+			// chartData.push({
+			// 	type: "line",
+			// 	showInLegend: true,
+			// 	name: "Level starts",
+			// 	yValueFormatString: "$#,##0.00",
+			// 	xValueFormatString: "#",
+			// 	dataPoints: levelStarts
+			// });
+			chartData.push({
+				type: "line",
+				showInLegend: true,
+				name: "Level ends",
+				yValueFormatString: "$#,##0.00",
+				xValueFormatString: "#",
+				dataPoints: levelEnds
+			});
+		}
+
+		var chart = new CanvasJS.Chart("chartContainer", {
+			animationEnabled: false,
+			theme: "light2", // "light1", "light2", "dark1", "dark2"
+			exportEnabled: true,
+			title:{
+				text: "BTC analytics"
+			},
+			subtitles: [{
+				text: "All Prices are in USD"
+			}],
+			axisX: {
+				valueFormatString: "###"
+			},
+			axisY: {
+				prefix: "$",
+				title: "Price"
+			},
+			axisY2: {
+				prefix: "$",
+				suffix: "bn",
+				title: "Revenue & Income",
+				tickLength: 0
+			},
+			toolTip: {
+				shared: true
+			},
+			legend: {
+				reversed: true,
+				cursor: "pointer",
+				itemclick: toggleDataSeries
+			},     
+			data: chartData
+		});
+		chart.render();
+	}, 3000);
+
+function toggleDataSeries(e) {
+	if (typeof (e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
+		e.dataSeries.visible = false;
+	} else {
+		e.dataSeries.visible = true;
+	}
+	e.chart.render();
+}
+
+}
+window.onload = showChart
+setInterval(showChart, 60000);
+</script>
+</head>
+<body>
+<div id="chartContainer" style="height: 600px; width: 80%;"></div>
+<script type="text/javascript" src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+</body>
+</html>

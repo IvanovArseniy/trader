@@ -14,7 +14,6 @@ select 0, "month", "day", "hour", 0, (select bid from "RateHistory" where create
 	group by "month", "day", "hour"
 ) as "t"
 order by "month", "day", "hour";
-delete from "Candle" where "active" = 0 and "Id" = (select "Id" from "Candle" order by "Id" desc limit 1);
 delete from "Candle" where "active" = 1;
 update "Candle" set "active" = 1;
 $BODY$;

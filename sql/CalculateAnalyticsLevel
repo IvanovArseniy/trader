@@ -1,0 +1,36 @@
+-- PROCEDURE: public.CalculateAnalyticsLevel()
+
+-- DROP PROCEDURE public."CalculateAnalyticsLevel"();
+
+CREATE OR REPLACE PROCEDURE public."CalculateAnalyticsLevel"(
+	)
+LANGUAGE 'sql'
+AS $BODY$
+insert into "Level" ("type", "active", "bidfrom", "bidto", "expired")
+select  1, 1, ((GREATEST(c1."startbid", c1."endbid") + GREATEST(c2."startbid", c2."endbid") + GREATEST(c3."startbid", c3."endbid") + GREATEST(c4."startbid", c4."endbid")) / 4), LEAST(c2."endbid", c3."startbid"), (now() + (3 * interval '1 month'))
+from "Candle" c1
+join "Candle" c2 on c2."Id" = (c1."Id" + 1)
+join "Candle" c3 on c3."Id" = (c2."Id" + 1)
+join "Candle" c4 on c4."Id" = (c3."Id" + 1)
+where c1."startbid" > c1."endbid" and c2."startbid" > c2."endbid"
+	and c3."startbid" < c3."endbid" and c4."endbid" > c3."startbid"
+	and (GREATEST(c1."startbid", c2."startbid", c3."startbid", c4."startbid") - LEAST(c1."endbid", c2."endbid", c3."endbid", c4."endbid") > 100)
+	and c1."Id" > (select max("Id") - 5 from "Candle")
+	and c2."Id" > (select max("Id") - 4 from "Candle")
+	and c3."Id" > (select max("Id") - 3 from "Candle")
+	and c4."Id" > (select max("Id") - 2 from "Candle");
+
+insert into "Level" ("type", "active", "bidfrom", "bidto", "expired")
+select  2, 1, ((LEAST(c1."startbid", c1."endbid") + LEAST(c2."startbid", c2."endbid") + LEAST(c3."startbid", c3."endbid") + LEAST(c4."startbid", c4."endbid")) / 4), GREATEST(c2."endbid", c3."startbid"), (now() + (3 * interval '1 month'))
+from "Candle" c1
+join "Candle" c2 on c2."Id" = (c1."Id" + 1)
+join "Candle" c3 on c3."Id" = (c2."Id" + 1)
+join "Candle" c4 on c4."Id" = (c3."Id" + 1)
+where c1."startbid" < c1."endbid" and c2."startbid" < c2."endbid"
+	and c3."startbid" > c3."endbid" and c4."endbid" < c3."startbid"
+	and (GREATEST(c1."endbid", c2."endbid", c3."endbid", c4."endbid") - LEAST(c1."startbid", c2."startbid", c3."startbid", c4."startbid") > 100)
+	and c1."Id" > (select max("Id") - 5 from "Candle")
+	and c2."Id" > (select max("Id") - 4 from "Candle")
+	and c3."Id" > (select max("Id") - 3 from "Candle")
+	and c4."Id" > (select max("Id") - 2 from "Candle");
+$BODY$;

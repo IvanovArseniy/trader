@@ -1,12 +1,12 @@
 {
     "RunInterval": 10,
-    "RoundPriceLimiter": 1,
-    "RoundPriceAddition": 1,
+    "RoundPriceLimiter": 5,
+    "RoundPriceAddition": 2,
     "RoundPriceBase": 100,
     "Quantity": 0.001,
-    "StopPriceAddition": 10.0,
-    "PriceGrowthCoef": 1.0,
+    "StopPriceAddition": 100,
+    "PriceGrowthCoef": 2.8,
     "StopPriceGapForOrder": 10,
-    "GetLevelBottomGap": 30,
-    "GetPriceGrowthLimit": 20
+    "GetLevelBottomGap": 20,
+    "GetPriceGrowthLimit": 10
 }

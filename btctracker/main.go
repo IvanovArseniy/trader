@@ -13,8 +13,10 @@ func main() {
 	ticketChannel := make(chan tracker.Ticket)
 
 	i := 0
+	j := 0
 	for {
 		i++
+		j++
 		time.Sleep(5 * time.Second)
 		go func() {
 			ticket, err := binanceservice.GetTicket()
@@ -40,11 +42,17 @@ func main() {
 				if err != nil {
 					fmt.Printf("Error occured %v\n", err)
 				}
-				err = postgresservice.CalculateLevel()
+			}()
+		}
+		if j == 720 {
+			j = 0
+			go func() {
+				err := postgresservice.CalculateLevel()
 				if err != nil {
 					fmt.Printf("Error occured %v\n", err)
 				}
 			}()
 		}
+
 	}
 }

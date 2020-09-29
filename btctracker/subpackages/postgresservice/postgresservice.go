@@ -54,7 +54,7 @@ func CalculateLevel() (funcErr error) {
 	}
 	defer db.Close()
 
-	_, err = db.Exec("call \"CalculateLevel\"()")
+	_, err = db.Exec("call \"CalculateAnalyticsLevel\"()")
 	if err != nil {
 		funcErr = err
 		return
