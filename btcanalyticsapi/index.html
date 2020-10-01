@@ -149,7 +149,15 @@ function toggleDataSeries(e) {
 
 }
 window.onload = showChart
-setInterval(showChart, 60000);
+setInterval(function() {
+	$.ajax('http://localhost:8080/ticket/', {
+    success: function (data) {
+		document.title = "bid " + data.Bid + " ask " + data.Ask
+    },
+    error: function (jqXhr, textStatus, errorMessage) {
+    }
+	});
+}, 5000);
 </script>
 </head>
 <body>

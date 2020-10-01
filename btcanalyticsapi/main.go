@@ -17,6 +17,7 @@ func main() {
 	router.HandleFunc("/candles/", getCandles)
 	router.HandleFunc("/levels/", getLevels)
 	router.HandleFunc("/orders/", getOrders)
+	router.HandleFunc("/ticket/", getTicket)
 
 	log.Fatal(http.ListenAndServe(":8080", router))
 }
@@ -58,4 +59,15 @@ func getOrders(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", r.Header.Get("Origin"))
 	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
 	json.NewEncoder(w).Encode(orders)
+}
+
+func getTicket(w http.ResponseWriter, r *http.Request) {
+	ticket, err := binanceservice.GetTicket()
+	if err != nil {
+		panic(err)
+	}
+	w.Header().Add("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", r.Header.Get("Origin"))
+	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	json.NewEncoder(w).Encode(ticket)
 }

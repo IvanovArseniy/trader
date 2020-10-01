@@ -19,6 +19,30 @@ type serverTime struct {
 	Time int64 `json:"serverTime,int"`
 }
 
+type binanceTicket struct {
+	symbol             string
+	PriceChange        float64 `json:",string"`
+	PriceChangePercent float64 `json:",string"`
+	WeightedAvgPrice   float64 `json:",string"`
+	PrevClosePrice     float64 `json:",string"`
+	LastPrice          float64 `json:",string"`
+	LastQty            float64 `json:",string"`
+	BidPrice           float64 `json:",string"`
+	BidQty             float64 `json:",string"`
+	AskPrice           float64 `json:",string"`
+	AskQty             float64 `json:",string"`
+	OpenPrice          float64 `json:",string"`
+	HighPrice          float64 `json:",string"`
+	LowPrice           float64 `json:",string"`
+	Volume             float64 `json:",string"`
+	QuoteVolume        float64 `json:",string"`
+	openTime           int64
+	closeTime          int64
+	firstID            int32
+	lastID             int32
+	count              int32
+}
+
 type binanceOrder struct {
 	symbol              string
 	ID                  int64 `json:"orderId,int"`
@@ -329,5 +353,41 @@ func CloseOrder(orderID int64) (result bool, err error) {
 		return
 	}
 	result = getIDByStatus(binanceOrder.Status) == analitycsapi.ClosedOrder || getIDByStatus(binanceOrder.Status) == analitycsapi.CanceledOrder
+	return
+}
+
+//GetTicket requests ticket data from binance
+func GetTicket() (ticket analitycsapi.Ticket, funcErr error) {
+	url := "https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT"
+	binanceClient := http.Client{
+		Timeout: time.Second * 30,
+	}
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		funcErr = err
+	}
+
+	res, httpErr := binanceClient.Do(req)
+	if httpErr != nil {
+		funcErr = httpErr
+	}
+	if res != nil {
+		defer res.Body.Close()
+	} else {
+		return
+	}
+
+	body, readErr := ioutil.ReadAll(res.Body)
+	if readErr != nil {
+		funcErr = readErr
+	}
+
+	binanceTicket := binanceTicket{}
+	jsonErr := json.Unmarshal(body, &binanceTicket)
+	if jsonErr != nil {
+		funcErr = jsonErr
+	}
+
+	ticket = analitycsapi.Ticket{Bid: binanceTicket.BidPrice, Ask: binanceTicket.AskPrice, CreatedOn: time.Now()}
 	return
 }
