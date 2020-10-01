@@ -14,7 +14,7 @@ join "Candle" c3 on c3."Id" = (c2."Id" + 1)
 join "Candle" c4 on c4."Id" = (c3."Id" + 1)
 where c2."startbid" > c2."endbid"
 	and c3."startbid" < c3."endbid"
-	and (GREATEST(c1."startbid", c2."startbid", c3."startbid", c4."startbid") - LEAST(c1."endbid", c2."endbid", c3."endbid", c4."endbid") > 60)
+	and (GREATEST(c1."startbid", c2."startbid", c3."endbid", c4."endbid") - LEAST( c2."endbid", c3."startbid") > 60)
 	and c1."Id" > (select max("Id") - 5 from "Candle")
 	and c2."Id" > (select max("Id") - 4 from "Candle")
 	and c3."Id" > (select max("Id") - 3 from "Candle")
@@ -28,7 +28,7 @@ join "Candle" c3 on c3."Id" = (c2."Id" + 1)
 join "Candle" c4 on c4."Id" = (c3."Id" + 1)
 where c2."startbid" < c2."endbid"
 	and c3."startbid" > c3."endbid"
-	and (GREATEST(c1."endbid", c2."endbid", c3."endbid", c4."endbid") - LEAST(c1."startbid", c2."startbid", c3."startbid", c4."startbid") > 60)
+	and (GREATEST(c2."endbid", c3."startbid") - LEAST(c1."startbid", c2."startbid", c3."endbid", c4."endbid") > 60)
 	and c1."Id" > (select max("Id") - 5 from "Candle")
 	and c2."Id" > (select max("Id") - 4 from "Candle")
 	and c3."Id" > (select max("Id") - 3 from "Candle")
