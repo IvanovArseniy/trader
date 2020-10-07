@@ -16,7 +16,7 @@ where c1."startbid" > c2."endbid"
 	and c2."startbid" > c2."endbid"
 	and c3."startbid" < c3."endbid"
 	and c3."startbid" < c4."endbid"
-	and (GREATEST(c1."startbid", c2."startbid", c3."endbid", c4."endbid") - LEAST( c2."endbid", c3."startbid") > 60)
+	and (GREATEST(c1."startbid", c2."startbid", c3."endbid", c4."endbid") - LEAST( c2."endbid", c3."startbid") > 50)
 	and c1."Id" > (select max("Id") - 5 from "Candle")
 	and c2."Id" > (select max("Id") - 4 from "Candle")
 	and c3."Id" > (select max("Id") - 3 from "Candle")
@@ -32,7 +32,7 @@ where c1."startbid" < c2."endbid"
 	and c2."startbid" < c2."endbid"
 	and c3."startbid" > c3."endbid"
 	and c3."startbid" > c4."endbid"
-	and (GREATEST(c2."endbid", c3."startbid") - LEAST(c1."startbid", c2."startbid", c3."endbid", c4."endbid") > 60)
+	and (GREATEST(c2."endbid", c3."startbid") - LEAST(c1."startbid", c2."startbid", c3."endbid", c4."endbid") > 50)
 	and c1."Id" > (select max("Id") - 5 from "Candle")
 	and c2."Id" > (select max("Id") - 4 from "Candle")
 	and c3."Id" > (select max("Id") - 3 from "Candle")

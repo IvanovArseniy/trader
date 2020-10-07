@@ -1,0 +1,34 @@
+update "Level" set "active" = 0 where "Id" IN (
+	select l1."Id" from "Level" l1
+	join "Level" l2 on 1 = 1
+	where l1."active" = 1  and l2."active" = 1 and l1."Id" > l2."Id"
+	and l1."bidto" > (l2."bidto" - 50) and l1."bidto" < (l2."bidto" + 1)
+	and l1."type" = 1 and l2."type" = 1
+);
+
+update "Level" set "active" = 0 where "Id" IN (
+	select l1."Id" from "Level" l1
+	join "Level" l2 on 1 = 1
+	where l1."active" = 1  and l2."active" = 1 and l1."Id" > l2."Id"
+	and l1."bidto" > (l2."bidto" - 50) and l1."bidto" < (l2."bidto" + 1)
+	and l1."type" = 1 and l2."type" = 1
+);
+
+update "Level" set "active" = 0 where "Id" IN (
+	select l1."Id" from "Level" l1
+	join "Level" l2 on 1 = 1
+	where l1."active" = 1  and l2."active" = 1 and l1."Id" > l2."Id"
+	and l1."bidto" > (l2."bidto" - 1) and l1."bidto" < (l2."bidto" + 50)
+	and l1."type" = 2 and l2."type" = 2
+);
+
+update "Level" set "active" = 0 where "Id" IN (
+	select l1."Id" from "Level" l1
+	join "Level" l2 on 1 = 1
+	where l1."active" = 1  and l2."active" = 1 and l1."Id" < l2."Id"
+	and l1."bidto" > (l2."bidto" - 1) and l1."bidto" < (l2."bidto" + 50)
+	and l1."type" = 2 and l2."type" = 2
+);
+
+
+update "Level" set "active" = 1

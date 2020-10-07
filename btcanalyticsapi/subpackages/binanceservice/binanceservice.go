@@ -10,7 +10,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"time"
-	analitycsapi "trader/btcanalyticsapi/root"
+	analyticsapi "trader/btcanalyticsapi/root"
 
 	"github.com/tkanos/gonfig"
 )
@@ -116,41 +116,41 @@ func createSignature(data string, secret string) (signature string, err error) {
 	return
 }
 
-func getSideByID(orderside analitycsapi.OrderSide) (side string) {
-	if orderside == analitycsapi.BuySide {
+func getSideByID(orderside analyticsapi.OrderSide) (side string) {
+	if orderside == analyticsapi.BuySide {
 		side = "BUY"
-	} else if orderside == analitycsapi.SellSide {
+	} else if orderside == analyticsapi.SellSide {
 		side = "SELL"
 	}
 	return
 }
 
-func getIDBySide(side string) (orderside analitycsapi.OrderSide) {
+func getIDBySide(side string) (orderside analyticsapi.OrderSide) {
 	if side == "BUY" {
-		orderside = analitycsapi.BuySide
+		orderside = analyticsapi.BuySide
 	}
 	if side == "SELL" {
-		orderside = analitycsapi.SellSide
+		orderside = analyticsapi.SellSide
 	}
 	return
 }
 
-func getIDByStatus(status string) (orderstatus analitycsapi.OrderStatus) {
+func getIDByStatus(status string) (orderstatus analyticsapi.OrderStatus) {
 	if status == "NEW" || status == "PARTIALLY_FILLED" || status == "PENDING_CANCEL" {
-		orderstatus = analitycsapi.OpenedOrder
+		orderstatus = analyticsapi.OpenedOrder
 	}
 	if status == "FILLED" {
-		orderstatus = analitycsapi.ClosedOrder
+		orderstatus = analyticsapi.ClosedOrder
 	}
 	if status == "CANCELED" || status == "REJECTED" || status == "EXPIRED" {
-		orderstatus = analitycsapi.CanceledOrder
+		orderstatus = analyticsapi.CanceledOrder
 	}
 	return
 }
 
 //GetOpenedOrders function get all opened orders
-func GetOpenedOrders() (orders []analitycsapi.Order, err error) {
-	configuration := analitycsapi.Configuration{}
+func GetOpenedOrders() (orders []analyticsapi.Order, err error) {
+	configuration := analyticsapi.Configuration{}
 	err = gonfig.GetConf("config/config.json", &configuration)
 	if err != nil {
 		return
@@ -192,16 +192,16 @@ func GetOpenedOrders() (orders []analitycsapi.Order, err error) {
 	if err != nil {
 		return
 	}
-	orders = []analitycsapi.Order{}
+	orders = []analyticsapi.Order{}
 	for _, o := range binanceOrders {
-		orders = append(orders, analitycsapi.Order{Price: o.Price, Quantity: o.OrigQty, Status: getIDByStatus(o.Status), Side: getIDBySide(o.Side), ExternalID: o.ID})
+		orders = append(orders, analyticsapi.Order{Price: o.Price, Quantity: o.OrigQty, Status: getIDByStatus(o.Status), Side: getIDBySide(o.Side), ExternalID: o.ID})
 	}
 	return
 }
 
 //CreateOrder function create order at binance
-func CreateOrder(order analitycsapi.Order) (orderID int64, err error) {
-	configuration := analitycsapi.Configuration{}
+func CreateOrder(order analyticsapi.Order) (orderID int64, err error) {
+	configuration := analyticsapi.Configuration{}
 	err = gonfig.GetConf("config/config.json", &configuration)
 	if err != nil {
 		return
@@ -251,8 +251,8 @@ func CreateOrder(order analitycsapi.Order) (orderID int64, err error) {
 }
 
 //CreateOcoOrder function creates a pair of orders -TAKE_PROFIT and STOP_LOSS orders
-func CreateOcoOrder(order analitycsapi.Order) (orderID int64, err error) {
-	configuration := analitycsapi.Configuration{}
+func CreateOcoOrder(order analyticsapi.Order) (orderID int64, err error) {
+	configuration := analyticsapi.Configuration{}
 	err = gonfig.GetConf("config/config.json", &configuration)
 	if err != nil {
 		return
@@ -308,7 +308,7 @@ func CreateOcoOrder(order analitycsapi.Order) (orderID int64, err error) {
 
 //CloseOrder function close order by orderID
 func CloseOrder(orderID int64) (result bool, err error) {
-	configuration := analitycsapi.Configuration{}
+	configuration := analyticsapi.Configuration{}
 	err = gonfig.GetConf("config/config.json", &configuration)
 	if err != nil {
 		return
@@ -352,12 +352,12 @@ func CloseOrder(orderID int64) (result bool, err error) {
 	if err != nil {
 		return
 	}
-	result = getIDByStatus(binanceOrder.Status) == analitycsapi.ClosedOrder || getIDByStatus(binanceOrder.Status) == analitycsapi.CanceledOrder
+	result = getIDByStatus(binanceOrder.Status) == analyticsapi.ClosedOrder || getIDByStatus(binanceOrder.Status) == analyticsapi.CanceledOrder
 	return
 }
 
 //GetTicket requests ticket data from binance
-func GetTicket() (ticket analitycsapi.Ticket, funcErr error) {
+func GetTicket() (ticket analyticsapi.Ticket, funcErr error) {
 	url := "https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT"
 	binanceClient := http.Client{
 		Timeout: time.Second * 30,
@@ -388,6 +388,6 @@ func GetTicket() (ticket analitycsapi.Ticket, funcErr error) {
 		funcErr = jsonErr
 	}
 
-	ticket = analitycsapi.Ticket{Bid: binanceTicket.BidPrice, Ask: binanceTicket.AskPrice, CreatedOn: time.Now()}
+	ticket = analyticsapi.Ticket{Bid: binanceTicket.BidPrice, Ask: binanceTicket.AskPrice, CreatedOn: time.Now()}
 	return
 }

@@ -1,4 +1,4 @@
-package analitycsapi
+package analyticsapi
 
 import "time"
 
@@ -12,6 +12,11 @@ type Configuration struct {
 //TradeConfiguration is a configuration element from tradeConfig.json
 type TradeConfiguration struct {
 	Quantity float64
+}
+
+//OperationResult is a rusult of any operation
+type OperationResult struct {
+	Result bool
 }
 
 // Ticket is an element with ask and bid in some moment

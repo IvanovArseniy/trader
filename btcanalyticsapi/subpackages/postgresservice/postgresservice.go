@@ -2,7 +2,7 @@ package postgresservice
 
 import (
 	"database/sql"
-	analitycsapi "trader/btcanalyticsapi/root"
+	analyticsapi "trader/btcanalyticsapi/root"
 	orderer "trader/btcorderer/root"
 
 	//Database import
@@ -11,8 +11,8 @@ import (
 )
 
 //GetLevels get all active levels from database
-func GetLevels() (levels analitycsapi.Levels, err error) {
-	configuration := analitycsapi.Configuration{}
+func GetLevels() (levels analyticsapi.Levels, err error) {
+	configuration := analyticsapi.Configuration{}
 	err = gonfig.GetConf("config/config.json", &configuration)
 	if err != nil {
 		return
@@ -24,15 +24,15 @@ func GetLevels() (levels analitycsapi.Levels, err error) {
 	}
 	defer db.Close()
 
-	rows, err := db.Query("select \"Id\", \"bidfrom\", \"bidto\" from \"Level\" where \"active\" = 1 and \"deleted\" = 0")
+	rows, err := db.Query("select \"Id\", \"bidfrom\", \"bidto\" from \"Level\" where \"active\" = 1 and \"deleted\" = 0 order by \"bidto\" desc")
 	if err != nil {
 		return
 	}
 	defer rows.Close()
 
-	levels = analitycsapi.Levels{}
+	levels = analyticsapi.Levels{}
 	for rows.Next() {
-		level := analitycsapi.Level{}
+		level := analyticsapi.Level{}
 		err := rows.Scan(&level.ID, &level.BidFrom, &level.BidTo)
 		if err != nil {
 			continue
@@ -43,8 +43,8 @@ func GetLevels() (levels analitycsapi.Levels, err error) {
 }
 
 //GetCandles get all candles from databases
-func GetCandles() (candles analitycsapi.Candles, err error) {
-	configuration := analitycsapi.Configuration{}
+func GetCandles() (candles analyticsapi.Candles, err error) {
+	configuration := analyticsapi.Configuration{}
 	err = gonfig.GetConf("config/config.json", &configuration)
 	if err != nil {
 		return
@@ -63,7 +63,7 @@ func GetCandles() (candles analitycsapi.Candles, err error) {
 	defer rows.Close()
 
 	for rows.Next() {
-		candle := analitycsapi.Candle{}
+		candle := analyticsapi.Candle{}
 		err := rows.Scan(&candle.StartBid, &candle.MinBid, &candle.MaxBid, &candle.EndBid)
 		if err != nil {
 			continue
