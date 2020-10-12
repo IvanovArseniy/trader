@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"math"
 	orderer "trader/btcorderer/root"
 	"trader/btcorderer/subpackages/binanceservice"
 	"trader/btcorderer/subpackages/postgresservice"
@@ -178,5 +179,7 @@ func GetConfirmedRisk(risks orderer.Risks) (buyPrice float64, stopLossPrice floa
 			}
 		}
 	}
+	buyPrice = math.Floor(buyPrice*100) / 100
+	stopLossPrice = math.Floor(stopLossPrice*100) / 100
 	return
 }
