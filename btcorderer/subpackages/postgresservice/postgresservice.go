@@ -13,8 +13,8 @@ type growth struct {
 	Price float64
 }
 
-//GetLevel try to find nearby levels for bid
-func GetLevel(bid float64) (level orderer.Level, err error) {
+//GetLevelAtTop tries to find closest level from top for price
+func GetLevelAtTop(price float64) (level orderer.Level, err error) {
 	configuration := orderer.Configuration{}
 	err = gonfig.GetConf("config/config.json", &configuration)
 	if err != nil {
@@ -33,7 +33,7 @@ func GetLevel(bid float64) (level orderer.Level, err error) {
 	}
 	defer db.Close()
 
-	rows, err := db.Query("select \"Id\", \"bidfrom\", \"bidto\" from \"Level\" where (\"bidfrom\" - 20) < $1 and (\"bidfrom\" + $2) > $1 and \"active\" = 1 and \"deleted\" = 0", bid, tradeConfig.GetLevelBottomGap)
+	rows, err := db.Query("select \"Id\", \"bidfrom\", \"bidto\" from \"Level\" where (\"bidto\" - $1) < $2 and \"bidto\" > $2 and \"active\" = 1 and \"deleted\" = 0", tradeConfig.GetLevelBottomGap, price)
 	if err != nil {
 		return
 	}
@@ -44,6 +44,43 @@ func GetLevel(bid float64) (level orderer.Level, err error) {
 		if err != nil {
 			continue
 		}
+	}
+	return
+}
+
+//GetLevels returns all active levels
+func GetLevels() (levels []orderer.Level, err error) {
+	configuration := orderer.Configuration{}
+	err = gonfig.GetConf("config/config.json", &configuration)
+	if err != nil {
+		return
+	}
+
+	tradeConfig := orderer.TradeConfiguration{}
+	err = gonfig.GetConf("config/tradeConfig.json", &tradeConfig)
+	if err != nil {
+		return
+	}
+
+	db, err := sql.Open("postgres", configuration.PostgresConnectionString)
+	if err != nil {
+		return
+	}
+	defer db.Close()
+
+	rows, err := db.Query("select \"Id\", \"bidfrom\", \"bidto\" from \"Level\" where \"active\" = 1 and \"deleted\" = 0 order by \"bidto\" asc")
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		level := orderer.Level{}
+		err := rows.Scan(&level.ID, &level.BidFrom, &level.BidTo)
+		if err != nil {
+			continue
+		}
+		levels = append(levels, level)
 	}
 	return
 }
@@ -167,43 +204,5 @@ func CloseOrder(orderID int64) (result bool, err error) {
 		return
 	}
 	result = affRows > 0
-	return
-}
-
-//GetPriceGrowth get price growth for last 14 hours
-func GetPriceGrowth(closePrice float64) (priceGrowth float64, err error) {
-	configuration := orderer.Configuration{}
-	err = gonfig.GetConf("config/config.json", &configuration)
-	if err != nil {
-		return
-	}
-
-	tradeConfig := orderer.TradeConfiguration{}
-	err = gonfig.GetConf("config/tradeConfig.json", &tradeConfig)
-	if err != nil {
-		return
-	}
-
-	db, err := sql.Open("postgres", configuration.PostgresConnectionString)
-	if err != nil {
-		return
-	}
-	defer db.Close()
-
-	rows, err := db.Query("select min(\"endbid\") as \"priceGrowth\" from (select \"startbid\", \"endbid\" from \"Candle\" order by \"Id\" desc limit $1) t", tradeConfig.GetPriceGrowthLimit)
-	if err != nil {
-		return
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		growth := growth{}
-		err = rows.Scan(&growth.Price)
-		if err != nil {
-			continue
-		}
-		priceGrowth = closePrice - growth.Price
-		break
-	}
 	return
 }

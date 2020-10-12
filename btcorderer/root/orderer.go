@@ -83,3 +83,12 @@ const (
 	//BuySide is a BUY order side
 	BuySide OrderSide = 2
 )
+
+//Risk is a risk
+type Risk struct {
+	Buy      float64
+	StopLoss float64
+}
+
+//Risks is an array of Risk
+type Risks []Risk

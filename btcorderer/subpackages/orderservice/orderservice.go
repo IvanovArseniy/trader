@@ -12,18 +12,14 @@ import (
 )
 
 //CreateOrder function creates orders in binance and database
-func CreateOrder(level orderer.Level) (err error) {
+func CreateOrder(price float64) (err error) {
 	tradeConfig := orderer.TradeConfiguration{}
 	err = gonfig.GetConf("config/tradeConfig.json", &tradeConfig)
 	if err != nil {
 		return
 	}
 
-	order := orderer.Order{Price: level.BidFrom, Quantity: tradeConfig.Quantity, Side: orderer.SellSide, ParentOrderID: 0, Status: orderer.OpenedOrder, BuyPrice: level.BidTo}
-	p := int64(order.Price) % tradeConfig.RoundPriceBase
-	if p < tradeConfig.RoundPriceLimiter {
-		order.Price = float64(int64(order.Price)/100*100 - tradeConfig.RoundPriceAddition)
-	}
+	order := orderer.Order{Price: price, Quantity: tradeConfig.Quantity, Side: orderer.SellSide, ParentOrderID: 0, Status: orderer.OpenedOrder}
 	log.Println(fmt.Sprintf("Level was found, create order price:%f quantity%f", order.Price, order.Quantity))
 	fmt.Printf("Level was found, create order price:%f quantity%f\n", order.Price, order.Quantity)
 	orderID, err := binanceservice.CreateOrder(order)
@@ -68,28 +64,14 @@ func CloseOrder(orderID int64) (result bool, err error) {
 }
 
 //CreateOrderWithSlopLoss function creates buy order and stoploss order
-func CreateOrderWithSlopLoss(closePrice float64, priceGrowth float64, levelMaxPrice float64, parentOrderID int64) (err error) {
+func CreateOrderWithSlopLoss(buyPrice float64, stopLossPrice float64, parentOrderID int64) (err error) {
 	tradeConfig := orderer.TradeConfiguration{}
 	err = gonfig.GetConf("config/tradeConfig.json", &tradeConfig)
 	if err != nil {
 		return
 	}
 
-	stopPriceLimit := (levelMaxPrice + tradeConfig.StopPriceAddition)
-	s := int64(stopPriceLimit) % tradeConfig.RoundPriceBase
-	if s > (tradeConfig.RoundPriceBase - tradeConfig.RoundPriceLimiter) {
-		stopPriceLimit = float64(int64(stopPriceLimit)/100*100 + (tradeConfig.RoundPriceBase + tradeConfig.RoundPriceAddition))
-	}
-
-	buyPrice := (closePrice - (priceGrowth / tradeConfig.PriceGrowthCoef))
-	if (priceGrowth / tradeConfig.PriceGrowthCoef) < float64(50) {
-		buyPrice = (closePrice - float64(70))
-	}
-	b := int64(buyPrice) % tradeConfig.RoundPriceBase
-	if b > (tradeConfig.RoundPriceBase - tradeConfig.RoundPriceLimiter) {
-		buyPrice = float64(int64(buyPrice)/100*100 + (tradeConfig.RoundPriceBase + tradeConfig.RoundPriceAddition))
-	}
-	order := orderer.Order{Price: buyPrice, Quantity: tradeConfig.Quantity, Side: orderer.BuySide, StopPrice: (stopPriceLimit - tradeConfig.StopPriceGapForOrder), StopPriceLimit: stopPriceLimit, ParentOrderID: parentOrderID, Status: orderer.OpenedOrder}
+	order := orderer.Order{Price: buyPrice, Quantity: tradeConfig.Quantity, Side: orderer.BuySide, StopPrice: stopLossPrice, StopPriceLimit: stopLossPrice, ParentOrderID: parentOrderID, Status: orderer.OpenedOrder}
 	log.Println(fmt.Sprintf("It was an order to sell BTC. Create OCO order price:%f quantity:%f stopPrice:%f stopPriceLimit:%f", order.Price, order.Quantity, order.StopPrice, order.StopPriceLimit))
 	fmt.Printf("It was an order to sell BTC. Create OCO order price:%f quantity:%f stopPrice:%f stopPriceLimit:%f\n", order.Price, order.Quantity, order.StopPrice, order.StopPriceLimit)
 	orderID, err := binanceservice.CreateOcoOrder(order)
@@ -146,6 +128,55 @@ func GetClosePrice() (closePrice float64, err error) {
 	}
 	if closePrice == 0 {
 		err = errors.New("ClosePrice wasnt calculated")
+	}
+	return
+}
+
+//GetPriceByRisks function calculate prices by trade risks
+func GetPriceByRisks(price float64) (risks orderer.Risks, err error) {
+	commission := float64(0.00075)
+	priceRisk := price * commission
+	risk := float64(2.5)
+	for i := float64(20); i < 60; i = i + float64(2.5) {
+		stopLoss := (price + i)
+		stopLossRisk := (price+i)*(1+commission) - price
+		buy := price - (stopLossRisk+priceRisk)*risk
+		risks = append(risks, orderer.Risk{Buy: buy, StopLoss: stopLoss})
+	}
+	return
+}
+
+//GetConfirmedRisk functions calculates best risk by nearest bottom level
+func GetConfirmedRisk(risks orderer.Risks) (buyPrice float64, stopLossPrice float64, err error) {
+	levels, err := postgresservice.GetLevels()
+	if err != nil {
+		log.Println(fmt.Sprintf("Error occured %v", err))
+		fmt.Printf("Error occured %v\n", err)
+		return
+	}
+	buyPrice = 0
+	stopLossPrice = 0
+	for _, l := range levels {
+		for i, r := range risks {
+			if (i+1) < len(risks) && (r.Buy < l.BidTo && risks[i+1].Buy > l.BidTo) {
+				buyPrice = risks[i+1].Buy
+				stopLossPrice = risks[i+1].StopLoss
+			} else if (i+1) < len(risks) && (r.Buy > l.BidTo && risks[i+1].Buy < l.BidTo) {
+				buyPrice = r.Buy
+				stopLossPrice = r.StopLoss
+			}
+		}
+	}
+
+	if buyPrice == 0 || stopLossPrice == 0 {
+		buyPrice = risks[0].Buy
+		stopLossPrice = risks[0].StopLoss
+		for _, r := range risks {
+			if buyPrice > r.Buy {
+				buyPrice = r.Buy
+				stopLossPrice = r.StopLoss
+			}
+		}
 	}
 	return
 }

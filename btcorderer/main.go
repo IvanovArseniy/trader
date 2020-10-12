@@ -51,15 +51,15 @@ func main() {
 		log.Println(fmt.Sprintf("Current ticket is bid:%f, ask:%f", ticket.Bid, ticket.Ask))
 		fmt.Printf("Current ticket is bid:%f, ask:%f\n", ticket.Bid, ticket.Ask)
 
-		level, err := postgresservice.GetLevel(ticket.Bid)
+		level, err := postgresservice.GetLevelAtTop(ticket.Ask)
 		if err != nil {
 			log.Println(fmt.Sprintf("Error occured %v", err))
 			fmt.Printf("Error occured %v\n", err)
 			continue
 		}
 		if level != (orderer.Level{}) {
-			log.Println(fmt.Sprintf("Level from %f to %f was found", level.BidFrom, level.BidTo))
-			fmt.Printf("Level from %f to %f was found\n", level.BidFrom, level.BidTo)
+			log.Println(fmt.Sprintf("Level %f was found", level.BidTo))
+			fmt.Printf("Level %f was found", level.BidTo)
 		} else {
 			log.Println(fmt.Sprintf("Cant find level for this ticket"))
 			fmt.Printf("Cant find level for this ticket\n")
@@ -67,7 +67,7 @@ func main() {
 
 		if len(openedOrders) == 0 {
 			if level != (orderer.Level{}) {
-				err = orderservice.CreateOrder(level)
+				err = orderservice.CreateOrder(level.BidTo)
 				if err != nil {
 					log.Println(fmt.Sprintf("Error occured %v", err))
 					fmt.Printf("Error occured %v\n", err)
@@ -108,16 +108,14 @@ func main() {
 					log.Println(fmt.Sprintf("Close price i %f", closePrice))
 					fmt.Printf("Close price %f\n", closePrice)
 
-					priceGrowth, err := postgresservice.GetPriceGrowth(closePrice)
+					risks, err := orderservice.GetPriceByRisks(closePrice)
 					if err != nil {
 						log.Println(fmt.Sprintf("Error occured %v", err))
 						fmt.Printf("Error occured %v\n", err)
-						priceGrowth = 200
 					}
-					log.Println(fmt.Sprintf("Price growth id %f", priceGrowth))
-					fmt.Printf("Price growth id %f", priceGrowth)
+					buyPrice, stopLossPrice, err := orderservice.GetConfirmedRisk(risks)
 
-					err = orderservice.CreateOrderWithSlopLoss(closePrice, priceGrowth, openedOrders[0].BuyPrice, openedOrders[0].ID)
+					err = orderservice.CreateOrderWithSlopLoss(buyPrice, stopLossPrice, openedOrders[0].ID)
 					if err != nil {
 						log.Println(fmt.Sprintf("Error occured %v", err))
 						fmt.Printf("Error occured %v\n", err)
@@ -137,5 +135,4 @@ func main() {
 			orderservice.CloseOpenedSellOrders()
 		}
 	}
-
 }
