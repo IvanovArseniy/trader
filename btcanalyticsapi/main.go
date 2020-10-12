@@ -20,6 +20,7 @@ func handleRequest() {
 	router.HandleFunc("/ticket/", handler.GetTicket)
 	router.HandleFunc("/orders/", handler.GetOrders).Methods("GET")
 	router.HandleFunc("/orders/", handler.CancelOpenedOrders).Methods("DELETE")
+	router.HandleFunc("/calculateRisk/", handler.CalculateRisk).Methods("POST")
 
 	log.Fatal(http.ListenAndServe(":8080", router))
 }

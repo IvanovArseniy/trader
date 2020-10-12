@@ -56,7 +56,7 @@ func GetCandles() (candles analyticsapi.Candles, err error) {
 	}
 	defer db.Close()
 
-	rows, err := db.Query("select \"startbid\", \"minbid\", \"maxbid\", \"endbid\" from \"Candle\" order by \"Id\" asc")
+	rows, err := db.Query("select \"startbid\", \"minbid\", \"maxbid\", \"endbid\", \"mathree\", \"maseven\", \"matwentyfive\" from \"Candle\" order by \"Id\" asc")
 	if err != nil {
 		return
 	}
@@ -64,7 +64,7 @@ func GetCandles() (candles analyticsapi.Candles, err error) {
 
 	for rows.Next() {
 		candle := analyticsapi.Candle{}
-		err := rows.Scan(&candle.StartBid, &candle.MinBid, &candle.MaxBid, &candle.EndBid)
+		err := rows.Scan(&candle.StartBid, &candle.MinBid, &candle.MaxBid, &candle.EndBid, &candle.MaThree, &candle.MaSeven, &candle.MaTwentyfive)
 		if err != nil {
 			continue
 		}

@@ -5,6 +5,9 @@
 <script>
 function showChart () {
 	var candles = [];
+	var maThree = [];
+	var maSeven = [];
+	var maTwentyfive = [];
 	var candlesLoaded = false;
 	var levels = [];
 	var levelsLoaded = false;
@@ -26,6 +29,9 @@ function showChart () {
 		for(var i = 0; i < data.length; i++) {
 			if(data[i].StartBid != 0) {
 				candles.push({ x: (i), y: [data[i].StartBid, data[i].MaxBid, data[i].MinBid, data[i].EndBid] })
+				maThree.push({ x: (i), y: data[i].MaThree });
+				maSeven.push({ x: (i), y: data[i].MaSeven });
+				maTwentyfive.push({ x: (i), y: data[i].MaTwentyfive });
 			}
 		}
 		candlesLoaded = true;
@@ -57,6 +63,33 @@ function showChart () {
 			yValueFormatString: "$#,##0.00",
 			xValueFormatString: "#",
 			dataPoints: candles
+		});
+
+		chartData.push({
+			type: "line",
+			showInLegend: true,
+			name: "MA 3",
+			yValueFormatString: "$#,##0.00",
+			xValueFormatString: "#",
+			dataPoints: maThree
+		});
+
+		chartData.push({
+			type: "line",
+			showInLegend: true,
+			name: "MA 7",
+			yValueFormatString: "$#,##0.00",
+			xValueFormatString: "#",
+			dataPoints: maSeven
+		});
+
+		chartData.push({
+			type: "line",
+			showInLegend: true,
+			name: "MA 25",
+			yValueFormatString: "$#,##0.00",
+			xValueFormatString: "#",
+			dataPoints: maTwentyfive
 		});
 
 		if(orders.length > 0) {
@@ -161,7 +194,7 @@ setInterval(function() {
 </script>
 </head>
 <body>
-<div id="chartContainer" style="height: 800px; width: 100%;"></div>
+	<div style="overflow: scroll;"><div id="chartContainer" style="height: 800px; width: 200%;"></div></div>
 <script type="text/javascript" src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
 </body>
 </html>

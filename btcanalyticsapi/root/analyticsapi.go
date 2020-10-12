@@ -39,14 +39,31 @@ type Levels []Level
 
 //Candle is a candlestick
 type Candle struct {
-	StartBid float64
-	MinBid   float64
-	MaxBid   float64
-	EndBid   float64
+	StartBid     float64
+	MinBid       float64
+	MaxBid       float64
+	EndBid       float64
+	MaThree      float64
+	MaSeven      float64
+	MaTwentyfive float64
 }
 
 //Candles is an array of candles
 type Candles []Candle
+
+//Risk is a risk
+type Risk struct {
+	Buy      float64
+	StopLoss float64
+}
+
+//Price is some price
+type Price struct {
+	Price float64
+}
+
+//Risks is an array of Risk
+type Risks []Risk
 
 //Order is a real order
 type Order struct {

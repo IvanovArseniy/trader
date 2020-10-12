@@ -3,6 +3,8 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"net/http"
 	analyticsapi "trader/btcanalyticsapi/root"
 	"trader/btcanalyticsapi/subpackages/binanceservice"
@@ -79,4 +81,29 @@ func GetTicket(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", r.Header.Get("Origin"))
 	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
 	json.NewEncoder(w).Encode(ticket)
+}
+
+//CalculateRisk function calculates trade risks
+func CalculateRisk(w http.ResponseWriter, r *http.Request) {
+	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048756))
+	if err != nil {
+		panic(err)
+	}
+	defer r.Body.Close()
+	price := analyticsapi.Price{}
+	err = json.Unmarshal(body, &price)
+	if err != nil {
+		panic(err)
+	}
+	commission := float64(0.00075)
+	priceRisk := price.Price * commission
+	risk := float64(2.5)
+	risks := analyticsapi.Risks{}
+	for i := float64(20); i < 60; i = i + float64(2.5) {
+		stopLoss := (price.Price + i)
+		stopLossRisk := (price.Price+i)*(1+commission) - price.Price
+		buy := price.Price - (stopLossRisk+priceRisk)*risk
+		risks = append(risks, analyticsapi.Risk{Buy: buy, StopLoss: stopLoss})
+	}
+	json.NewEncoder(w).Encode(risks)
 }

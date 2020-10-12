@@ -1,0 +1,51 @@
+update "Candle" set
+"mathree" = s."mathree"
+from
+(select ((c1."endbid" + c2."endbid" + c3."endbid") / 3) as mathree, c3."Id" as "Id" from "Candle" c3
+join "Candle" c2 on c2."Id" = (c3."Id" - 1)
+join "Candle" c1 on c1."Id" = (c2."Id" - 1)) s
+where "Candle"."Id" = s."Id" ;
+
+update "Candle" set
+"maseven" = s."maseven"
+from
+(select ((c1."endbid" + c2."endbid" + c3."endbid" + c4."endbid" + c5."endbid" + c6."endbid" + c7."endbid") / 7) as maseven, c7."Id" as "Id" from "Candle" c7
+join "Candle" c6 on c6."Id" = (c7."Id" - 1)
+join "Candle" c5 on c5."Id" = (c6."Id" - 1)
+join "Candle" c4 on c4."Id" = (c5."Id" - 1)
+join "Candle" c3 on c3."Id" = (c4."Id" - 1)
+join "Candle" c2 on c2."Id" = (c3."Id" - 1)
+join "Candle" c1 on c1."Id" = (c2."Id" - 1)
+) s
+where "Candle"."Id" = s."Id";
+
+update "Candle" set
+"matwentyfive" = s."matwentyfive"
+from
+(select ((c1."endbid" + c2."endbid" + c3."endbid" + c4."endbid" + c5."endbid" + c6."endbid" + c7."endbid" + c8."endbid" + c9."endbid" + c10."endbid" + c11."endbid" + c12."endbid" + c13."endbid" + c14."endbid" + c15."endbid" + c16."endbid" + c17."endbid" + c18."endbid" + c19."endbid" + c20."endbid" + c21."endbid" + c22."endbid" + c23."endbid" + c24."endbid" + c25."endbid") / 25) as matwentyfive, c25."Id" as "Id" from "Candle" c25
+join "Candle" c24 on c24."Id" = (c25."Id" - 1)
+join "Candle" c23 on c23."Id" = (c24."Id" - 1)
+join "Candle" c22 on c22."Id" = (c23."Id" - 1)
+join "Candle" c21 on c21."Id" = (c22."Id" - 1)
+join "Candle" c20 on c20."Id" = (c21."Id" - 1)
+join "Candle" c19 on c19."Id" = (c20."Id" - 1)
+join "Candle" c18 on c18."Id" = (c19."Id" - 1)
+join "Candle" c17 on c17."Id" = (c18."Id" - 1)
+join "Candle" c16 on c16."Id" = (c17."Id" - 1)
+join "Candle" c15 on c15."Id" = (c16."Id" - 1)
+join "Candle" c14 on c14."Id" = (c15."Id" - 1)
+join "Candle" c13 on c13."Id" = (c14."Id" - 1)
+join "Candle" c12 on c12."Id" = (c13."Id" - 1)
+join "Candle" c11 on c11."Id" = (c12."Id" - 1)
+join "Candle" c10 on c10."Id" = (c11."Id" - 1)
+join "Candle" c9 on c9."Id" = (c10."Id" - 1)
+join "Candle" c8 on c8."Id" = (c9."Id" - 1)
+join "Candle" c7 on c7."Id" = (c8."Id" - 1)
+join "Candle" c6 on c6."Id" = (c7."Id" - 1)
+join "Candle" c5 on c5."Id" = (c6."Id" - 1)
+join "Candle" c4 on c4."Id" = (c5."Id" - 1)
+join "Candle" c3 on c3."Id" = (c4."Id" - 1)
+join "Candle" c2 on c2."Id" = (c3."Id" - 1)
+join "Candle" c1 on c1."Id" = (c2."Id" - 1)
+) s
+where "Candle"."Id" = s."Id";
