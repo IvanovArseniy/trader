@@ -95,7 +95,7 @@ function showChart () {
 		if(orders.length > 0) {
 			for(k = 0; k < orders.length; k++) {
 				orderData = [];
-				orderData.push({x: candles.length, y: orders[k]});
+				orderData.push({x: candles.length - 1, y: orders[k]});
 				chartData.push({
 						type: "line",
 						showInLegend: true,
@@ -114,8 +114,8 @@ function showChart () {
 			var levelStarts = [];
 			var levelEnds  = [];
 			for(j = 0; j < candles.length; j++) {
-				levelStarts.push({ x: (j + 1), y: levels[i].from });
-				levelEnds.push({ x: (j + 1), y: levels[i].to });
+				levelStarts.push({ x: j, y: levels[i].from });
+				levelEnds.push({ x: j, y: levels[i].to });
 			}
 			// chartData.push({
 			// 	type: "line",
