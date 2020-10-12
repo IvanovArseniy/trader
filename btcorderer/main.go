@@ -126,7 +126,22 @@ func main() {
 				if level == (orderer.Level{}) {
 					log.Println(fmt.Sprintf("Level wasnt found, close opened sell orders"))
 					fmt.Printf("Level wasnt found, close opened sell orders\n")
-					orderservice.CloseOpenedSellOrders()
+					res, err := binanceservice.CloseOrder(openedOrders[0].ExternalID)
+					if err != nil {
+						log.Println(fmt.Sprintf("Error occured %v", err))
+						fmt.Printf("Error occured %v\n", err)
+						continue
+					}
+					if res {
+						_, err := orderservice.CloseOrder(openedOrders[0].ID)
+						if err != nil {
+							log.Println(fmt.Sprintf("Error occured %v", err))
+							fmt.Printf("Error occured %v\n", err)
+							continue
+						}
+					} else {
+						continue
+					}
 				}
 			}
 		} else {
