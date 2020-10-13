@@ -92,3 +92,12 @@ type Risk struct {
 
 //Risks is an array of Risk
 type Risks []Risk
+
+//Candle is a market candlestick
+type Candle struct {
+	ID       int64
+	StartBid float64
+	EndBid   float64
+	MinBid   float64
+	MaxBid   float64
+}

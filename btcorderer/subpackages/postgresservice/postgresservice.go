@@ -33,7 +33,7 @@ func GetLevelAtTop(price float64) (level orderer.Level, err error) {
 	}
 	defer db.Close()
 
-	rows, err := db.Query("select \"Id\", \"bidfrom\", \"bidto\" from \"Level\" where (\"bidto\" - $1) < $2 and \"bidto\" > $2 and \"active\" = 1 and \"deleted\" = 0", tradeConfig.GetLevelBottomGap, price)
+	rows, err := db.Query("select \"Id\", \"bidfrom\", \"bidto\" from \"Level\" where (\"bidto\" - $1) < $2 and (\"bidto\") > $2 and \"active\" = 1 and \"deleted\" = 0", tradeConfig.GetLevelBottomGap, price)
 	if err != nil {
 		return
 	}
@@ -204,5 +204,36 @@ func CloseOrder(orderID int64) (result bool, err error) {
 		return
 	}
 	result = affRows > 0
+	return
+}
+
+//GetTwoLastCandles returns two last candles
+func GetTwoLastCandles() (candles []orderer.Candle, err error) {
+	configuration := orderer.Configuration{}
+	err = gonfig.GetConf("config/config.json", &configuration)
+	if err != nil {
+		return
+	}
+
+	db, err := sql.Open("postgres", configuration.PostgresConnectionString)
+	if err != nil {
+		return
+	}
+	defer db.Close()
+
+	rows, err := db.Query("select \"Id\", \"startbid\", \"endbid\", \"minbid\", \"maxbid\" from \"Candle\" order by \"Id\" desc limit 2")
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		candle := orderer.Candle{}
+		err := rows.Scan(&candle.ID, &candle.StartBid, &candle.EndBid, &candle.MinBid, &candle.MaxBid)
+		if err != nil {
+			continue
+		}
+		candles = append(candles, candle)
+	}
 	return
 }

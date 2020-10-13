@@ -59,7 +59,7 @@ func main() {
 		}
 		if level != (orderer.Level{}) {
 			log.Println(fmt.Sprintf("Level %f was found", level.BidTo))
-			fmt.Printf("Level %f was found", level.BidTo)
+			fmt.Printf("Level %f was found\n", level.BidTo)
 		} else {
 			log.Println(fmt.Sprintf("Cant find level for this ticket"))
 			fmt.Printf("Cant find level for this ticket\n")
@@ -67,11 +67,42 @@ func main() {
 
 		if len(openedOrders) == 0 {
 			if level != (orderer.Level{}) {
-				err = orderservice.CreateOrder(level.BidTo)
+				candles, err := postgresservice.GetTwoLastCandles()
 				if err != nil {
 					log.Println(fmt.Sprintf("Error occured %v", err))
 					fmt.Printf("Error occured %v\n", err)
 					continue
+				}
+				log.Println(fmt.Sprintf("Candle startbid=%f, endbid=%f, minbid=%f, maxbid=%f", candles[0].StartBid, candles[0].EndBid, candles[0].MinBid, candles[0].MaxBid))
+				fmt.Printf("Candle startbid=%f, endbid=%f, minbid=%f, maxbid=%f\n", candles[0].StartBid, candles[0].EndBid, candles[0].MinBid, candles[0].MaxBid)
+				log.Println(fmt.Sprintf("Ticket is %f", ticket.Ask))
+				fmt.Printf("Ticket is %f\n", ticket.Ask)
+				if ((candles[0].StartBid + 20) < ticket.Ask) || (candles[1].StartBid < ticket.Ask) {
+					risks, err := orderservice.GetPriceByRisks(level.BidTo)
+					if err != nil {
+						log.Println(fmt.Sprintf("Error occured %v", err))
+						fmt.Printf("Error occured %v\n", err)
+					}
+
+					makeSellOrder, err := orderservice.CheckRisksByLevel(risks, level.BidTo)
+					if err != nil {
+						log.Println(fmt.Sprintf("Error occured %v", err))
+						fmt.Printf("Error occured %v\n", err)
+					}
+					log.Println(fmt.Sprintf("CheckRisksByLevel result is %v", makeSellOrder))
+					fmt.Printf("CheckRisksByLevel result is %v\n", makeSellOrder)
+
+					if makeSellOrder {
+						err = orderservice.CreateOrder(level.BidTo)
+						if err != nil {
+							log.Println(fmt.Sprintf("Error occured %v", err))
+							fmt.Printf("Error occured %v\n", err)
+							continue
+						}
+					}
+				} else {
+					log.Println(fmt.Sprintf("No order because ticket comes from top"))
+					fmt.Printf("No order because ticket comes from top\n")
 				}
 			}
 		} else if len(openedOrders) == 1 {
@@ -113,7 +144,12 @@ func main() {
 						log.Println(fmt.Sprintf("Error occured %v", err))
 						fmt.Printf("Error occured %v\n", err)
 					}
+
 					buyPrice, stopLossPrice, err := orderservice.GetConfirmedRisk(risks)
+					if err != nil {
+						log.Println(fmt.Sprintf("Error occured %v", err))
+						fmt.Printf("Error occured %v\n", err)
+					}
 
 					err = orderservice.CreateOrderWithSlopLoss(buyPrice, stopLossPrice, openedOrders[0].ID)
 					if err != nil {
@@ -123,7 +159,7 @@ func main() {
 					}
 				}
 			} else {
-				if level == (orderer.Level{}) {
+				if level == (orderer.Level{}) && openedOrders[0].ParentOrderID == 0 {
 					log.Println(fmt.Sprintf("Level wasnt found, close opened sell orders"))
 					fmt.Printf("Level wasnt found, close opened sell orders\n")
 					res, err := binanceservice.CloseOrder(openedOrders[0].ExternalID)

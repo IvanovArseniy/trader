@@ -138,7 +138,7 @@ func GetPriceByRisks(price float64) (risks orderer.Risks, err error) {
 	commission := float64(0.00075)
 	priceRisk := price * commission
 	risk := float64(2.5)
-	for i := float64(20); i < 60; i = i + float64(2.5) {
+	for i := float64(0); i < 60; i = i + float64(2.5) {
 		stopLoss := (price + i)
 		stopLossRisk := (price+i)*(1+commission) - price
 		buy := price - (stopLossRisk+priceRisk)*risk
@@ -181,5 +181,23 @@ func GetConfirmedRisk(risks orderer.Risks) (buyPrice float64, stopLossPrice floa
 	}
 	buyPrice = math.Floor(buyPrice*100) / 100
 	stopLossPrice = math.Floor(stopLossPrice*100) / 100
+	return
+}
+
+//CheckRisksByLevel functions calculates best risk by nearest bottom level
+func CheckRisksByLevel(risks orderer.Risks, closePrice float64) (makeSellOrder bool, err error) {
+	levels, err := postgresservice.GetLevels()
+	if err != nil {
+		log.Println(fmt.Sprintf("Error occured %v", err))
+		fmt.Printf("Error occured %v\n", err)
+		return
+	}
+	makeSellOrder = true
+	for _, l := range levels {
+		if l.BidTo > risks[0].Buy && l.BidTo < closePrice {
+			makeSellOrder = false
+			return
+		}
+	}
 	return
 }
