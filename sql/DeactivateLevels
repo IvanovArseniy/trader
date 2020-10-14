@@ -36,3 +36,9 @@ update "Level" set "active" = 0 where "Id" IN (
 	and l1."bidto" > l2."bidto" and l1."bidto" < (l2."bidto" + 50)
 	and l1."type" = 2 and l2."type" = 2
 );
+
+update "Level" set "active" = 0 where "Id" IN (
+	select "Id" from (
+		select "Id", "bidto", (select count(*) from "Candle" where (("startbid" < l."bidto" and "endbid" > l."bidto") or ("startbid" > l."bidto" and "endbid" < l."bidto")) and ("Id" > (select "Id" from "Candle" order by "Id" desc limit 1) - 30)) cnt from "Level" l where l."active" = 1 and l."deleted" = 0
+	) s where s.cnt >= 5
+)
